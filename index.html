@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchTogether — Смотрим видео вместе</title>
+    <style>
+        /* ===== Сброс и базовые стили ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== Контейнер главной страницы ===== */
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #aaaaaa;
+            margin-bottom: 2rem;
+        }
+
+        /* ===== Поле ввода ника ===== */
+        .nickname-section {
+            margin-bottom: 2rem;
+        }
+
+        .nickname-section label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #cccccc;
+        }
+
+        .nickname-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #333333;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .nickname-input:focus {
+            border-color: #6c63ff;
+        }
+
+        /* ===== Кнопка создания комнаты ===== */
+        .create-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(135deg, #6c63ff, #4834d4);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        }
+
+        .create-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ===== Секция входа в существующую комнату ===== */
+        .join-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #333333;
+        }
+
+        .join-section p {
+            margin-bottom: 1rem;
+            color: #aaaaaa;
+        }
+
+        .join-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .join-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #333333;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        .join-input:focus {
+            border-color: #6c63ff;
+        }
+
+        .join-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #333333;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .join-btn:hover {
+            background-color: #444444;
+        }
+
+        /* ===== Футер ===== */
+        footer {
+            position: fixed;
+            bottom: 1rem;
+            font-size: 0.85rem;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 WatchTogether</h1>
+        <p class="subtitle">Смотрите видео с друзьями синхронно</p>
+
+        <!-- Ввод ника -->
+        <div class="nickname-section">
+            <label for="nickname">Ваш ник:</label>
+            <input 
+                type="text" 
+                id="nickname" 
+                class="nickname-input" 
+                placeholder="Гость" 
+                maxlength="20"
+            >
+        </div>
+
+        <!-- Создание новой комнаты -->
+        <button id="createBtn" class="create-btn">Создать комнату</button>
+
+        <!-- Вход в существующую комнату -->
+        <div class="join-section">
+            <p>Или войдите в существующую комнату</p>
+            <form id="joinForm" class="join-form">
+                <input 
+                    type="text" 
+                    id="roomId" 
+                    class="join-input" 
+                    placeholder="ID комнаты" 
+                    maxlength="6"
+                    required
+                >
+                <button type="submit" class="join-btn">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>WatchTogether &copy; 2026</footer>
+
+    <script>
+        // ===== Элементы DOM =====
+        const createBtn = document.getElementById('createBtn');
+        const joinForm = document.getElementById('joinForm');
+        const roomIdInput = document.getElementById('roomId');
+        const nicknameInput = document.getElementById('nickname');
+
+        /**
+         * Генерирует случайный ID комнаты из 6 символов (буквы + цифры).
+         * @returns {string} ID комнаты
+         */
+        function generateRoomId() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        /**
+         * Сохраняет ник в localStorage для использования на странице комнаты.
+         */
+        function saveNickname() {
+            const nickname = nicknameInput.value.trim() || 'Гость';
+            localStorage.setItem('watchtogether_nickname', nickname);
+        }
+
+        // ===== Обработчик создания комнаты =====
+        createBtn.addEventListener('click', () => {
+            saveNickname();
+            const roomId = generateRoomId();
+            // Редирект на страницу комнаты с новым ID
+            window.location.href = `room.html?id=${roomId}`;
+        });
+
+        // ===== Обработчик входа в существующую комнату =====
+        joinForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveNickname();
+            const roomId = roomIdInput.value.trim().toUpperCase();
+            if (roomId.length === 6) {
+                window.location.href = `room.html?id=${roomId}`;
+            } else {
+                alert('ID комнаты должен состоять из 6 символов.');
+            }
+        });
+
+        // ===== Восстановление ника из localStorage =====
+        const savedNickname = localStorage.getItem('watchtogether_nickname');
+        if (savedNickname) {
+            nicknameInput.value = savedNickname;
+        }
+    </script>
+</body>
+</html>
