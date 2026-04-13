@@ -642,7 +642,6 @@
          */
         async function updatePlayerState(isPlaying) {
             if (!player) return;
-            // Для embed видео duration может быть недоступен
             if (typeof player.duration !== 'number') return;
             try {
                 await updateDoc(roomRef, {
@@ -701,32 +700,36 @@
             if (!playerState || !player) return;
 
             const { isPlaying, currentTime, timestamp } = playerState;
-
-            // Проверяем, что обновление не слишком старое (> 10 секунд)
             const now = Date.now();
-            if (now - timestamp > 10000) return;
 
-            // Проверяем, что прошло достаточно времени с последней синхронизации
+            // Игнорируем устаревшие (>10 сек) или слишком частые события
+            if (now - timestamp > 10000) return;
             if (now - lastSyncTime < 500) return;
 
-            // Для embed (YouTube/Vimeo) — Plyr может не иметь duration сразу
+            // Для embed-видео duration может быть ещё не определена
             if (typeof player.duration !== 'number' || player.duration <= 0) return;
 
-            // Если разница во времени > 1 секунды — синхронизируем
+            // Синхронизация времени
             const timeDiff = Math.abs(player.currentTime - currentTime);
-
             if (timeDiff > 1) {
                 ignoreNextUpdate = true;
                 player.currentTime = currentTime;
             }
 
-            // Синхронизируем play/pause
+            // Синхронизация play/pause
             if (isPlaying && !player.playing) {
                 ignoreNextUpdate = true;
-                player.play().catch(() => {});
+                if (typeof player.play === 'function') {
+                    const result = player.play();
+                    if (result && typeof result.catch === 'function') {
+                        result.catch(() => {});
+                    }
+                }
             } else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
-                player.pause();
+                if (typeof player.pause === 'function') {
+                    player.pause();
+                }
             }
 
             lastSyncTime = now;
