@@ -764,10 +764,7 @@
 
             if (isPlaying && !player.playing) {
                 ignoreNextUpdate = true;
-                const playPromise = player.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(() => {});
-                }
+                player.play().catch(() => {});
                 setTimeout(() => { ignoreNextUpdate = false; }, 400);
             } else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
@@ -867,7 +864,7 @@
                         ],
                         settings: ['quality', 'speed'],
                         youtube: {
-                            noCookie: false,
+                            noCookie: true,
                             rel: 0,
                             showinfo: 0,
                             iv_load_policy: 3,
