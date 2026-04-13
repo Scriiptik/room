@@ -800,7 +800,18 @@
 
                     embedEl.innerHTML = '';
                     embedEl.style.display = 'block';
+
+                    // Уничтожаем старый Plyr
+                    if (player) {
+                        player.destroy();
+                        player = null;
+                    }
+
+                    // Скрываем video элемент и его wrapper
                     videoEl.style.display = 'none';
+                    // Скрываем Plyr wrapper если остался
+                    const plyrWrapper = videoEl.closest('.plyr');
+                    if (plyrWrapper) plyrWrapper.style.display = 'none';
 
                     // Создаём контейнер с правильными data-атрибутами
                     const div = document.createElement('div');
@@ -836,6 +847,8 @@
                         }
                     }, 10000);
 
+                    setupPlayerHandlers();
+
                 } else if (type === 'vimeo') {
                     const videoId = extractVimeoId(url);
                     if (!videoId) {
@@ -845,7 +858,15 @@
 
                     embedEl.innerHTML = '';
                     embedEl.style.display = 'block';
+
+                    if (player) {
+                        player.destroy();
+                        player = null;
+                    }
+
                     videoEl.style.display = 'none';
+                    const plyrWrapper = videoEl.closest('.plyr');
+                    if (plyrWrapper) plyrWrapper.style.display = 'none';
 
                     const div = document.createElement('div');
                     div.setAttribute('data-plyr-provider', 'vimeo');
@@ -860,10 +881,21 @@
                         settings: ['quality', 'speed']
                     });
 
+                    setupPlayerHandlers();
+
                 } else if (type === 'mp4') {
                     embedEl.style.display = 'none';
                     embedEl.innerHTML = '';
+
+                    if (player) {
+                        player.destroy();
+                        player = null;
+                    }
+
                     videoEl.style.display = 'block';
+                    // Показываем Plyr wrapper
+                    const plyrWrapper = videoEl.closest('.plyr');
+                    if (plyrWrapper) plyrWrapper.style.display = 'block';
 
                     player = new Plyr('#player', {
                         controls: [
@@ -881,10 +913,9 @@
                             type: 'video/mp4'
                         }]
                     };
-                }
 
-                // Переподписываем обработчики
-                setupPlayerHandlers();
+                    setupPlayerHandlers();
+                }
 
                 // Обновляем Firestore только если это не загрузка из подписки
                 if (!fromSync) {
