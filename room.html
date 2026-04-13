@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WatchTogether — Комната</title>
-    <!-- Plyr CSS -->
+    <!-- Plyr CSS только для MP4 -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
             min-height: 100vh;
         }
 
-        /* ===== Шапка ===== */
+        /* Шапка */
         .header {
             position: sticky;
             top: 0;
@@ -123,7 +123,7 @@
             color: #fff;
         }
 
-        /* ===== Основной контейнер ===== */
+        /* Основной контейнер */
         .main {
             max-width: 1200px;
             margin: 0 auto;
@@ -133,7 +133,6 @@
             gap: 1rem;
         }
 
-        /* ===== Поле ввода видео ===== */
         .video-bar {
             display: flex;
             gap: 0.5rem;
@@ -153,7 +152,6 @@
         }
 
         .video-bar .input::placeholder { color: var(--text-dim); }
-
         .video-bar .input:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
@@ -181,13 +179,23 @@
         .btn-accent:active { transform: translateY(0); }
         .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* ===== Плеер ===== */
+        /* Плеер */
         .player-wrapper {
             width: 100%;
             background: #000;
             border-radius: var(--radius);
             overflow: hidden;
             aspect-ratio: 16 / 9;
+            position: relative;
+        }
+
+        .player-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
         }
 
         .player-wrapper video {
@@ -201,18 +209,16 @@
             height: 100%;
         }
 
-        /* Plyr overrides */
         .plyr { --plyr-color-main: var(--accent); height: 100%; }
         .plyr__video-wrapper { background: #000; }
 
-        /* ===== Нижняя секция ===== */
+        /* Нижняя секция */
         .bottom {
             display: flex;
             gap: 1rem;
             min-height: 320px;
         }
 
-        /* ===== Чат ===== */
         .chat {
             flex: 1;
             min-width: 0;
@@ -306,7 +312,6 @@
 
         .btn-send:hover { background: var(--accent-hover); }
 
-        /* ===== Участники ===== */
         .panel {
             width: 220px;
             background: var(--surface);
@@ -350,7 +355,6 @@
         }
 
         .member:hover { background: var(--surface-2); }
-
         .member-dot {
             width: 7px;
             height: 7px;
@@ -359,9 +363,6 @@
             flex-shrink: 0;
         }
 
-        .member.you { color: var(--text-muted); }
-
-        /* ===== Тост ===== */
         .toast {
             position: fixed;
             bottom: 1.25rem;
@@ -384,7 +385,6 @@
             opacity: 1;
         }
 
-        /* ===== Адаптивность ===== */
         @media (max-width: 768px) {
             .main { padding: 0.75rem 0.75rem 1.5rem; }
             .bottom { flex-direction: column; min-height: auto; }
@@ -397,7 +397,6 @@
     </style>
 </head>
 <body>
-    <!-- Шапка -->
     <div class="header">
         <div class="header-left">
             <button id="backBtn" class="btn-icon" title="На главную">←</button>
@@ -412,49 +411,28 @@
         </div>
     </div>
 
-    <!-- Основной контент -->
     <div class="main">
-        <!-- Поле ввода видео -->
         <form id="videoForm" class="video-bar">
-            <input
-                type="text"
-                id="videoUrlInput"
-                class="input"
-                placeholder="YouTube, Vimeo или прямая ссылка на .mp4"
-                required
-                autocomplete="off"
-            >
+            <input type="text" id="videoUrlInput" class="input" placeholder="YouTube, Vimeo или прямая ссылка на .mp4" required autocomplete="off">
             <button type="submit" id="loadBtn" class="btn-accent">▶ Загрузить</button>
         </form>
 
-        <!-- Плеер -->
         <div class="player-wrapper">
+            <!-- Контейнер для iframe (YouTube/Vimeo) -->
             <div id="playerEmbed" style="display:none;"></div>
-            <video id="player" playsinline controls>
-            </video>
+            <!-- Видео для MP4 -->
+            <video id="player" playsinline controls style="display:none;"></video>
         </div>
 
-        <!-- Чат и участники -->
         <div class="bottom">
-            <!-- Чат -->
             <div class="chat">
                 <div class="chat-head">💬 Чат</div>
                 <div id="chatMessages" class="chat-body"></div>
                 <form id="chatForm" class="chat-foot">
-                    <input
-                        type="text"
-                        id="chatInput"
-                        class="input"
-                        placeholder="Написать сообщение..."
-                        maxlength="500"
-                        required
-                        autocomplete="off"
-                    >
+                    <input type="text" id="chatInput" class="input" placeholder="Написать сообщение..." maxlength="500" required autocomplete="off">
                     <button type="submit" class="btn-send">➤</button>
                 </form>
             </div>
-
-            <!-- Участники -->
             <div class="panel">
                 <div class="panel-head">👥 Участники</div>
                 <div id="participantsList" class="panel-body"></div>
@@ -462,13 +440,13 @@
         </div>
     </div>
 
-    <!-- Тост -->
     <div id="errorToast" class="toast"></div>
 
-    <!-- Plyr JS -->
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Plyr только для MP4 -->
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 
-    <!-- Firebase SDK -->
     <script type="importmap">
     {
         "imports": {
@@ -479,24 +457,9 @@
     </script>
 
     <script type="module">
-        // ============================================================
-        // ===== НАСТРОЙКА FIREBASE =====
-        // ============================================================
-
         import { initializeApp } from 'firebase/app';
-        import {
-            getFirestore,
-            doc,
-            setDoc,
-            getDoc,
-            onSnapshot,
-            updateDoc,
-            arrayUnion,
-            serverTimestamp,
-            deleteField
-        } from 'firebase/firestore';
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, serverTimestamp, deleteField } from 'firebase/firestore';
 
-        // Конфигурация Firebase проекта room-4ac0b
         const firebaseConfig = {
             apiKey: "AIzaSyAPAuJUcd9_YWWvVAqiWOtlllV0An0bD18",
             authDomain: "room-4ac0b.firebaseapp.com",
@@ -507,55 +470,25 @@
             measurementId: "G-SPNKBKPHH1"
         };
 
-        // Инициализация Firebase
-        let app, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log('Firebase инициализирован успешно');
-        } catch (e) {
-            console.error('Ошибка инициализации Firebase:', e);
-        }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        console.log('Firebase инициализирован');
 
-        // ============================================================
-        // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
-        // ============================================================
-
-        // Получаем ID комнаты из URL
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('id');
-
-        // Ник пользователя (из localStorage или "Гость")
         const nickname = localStorage.getItem('watchtogether_nickname') || 'Гость';
-
-        // Уникальный ID пользователя для отслеживания присутствия
         const userId = Math.random().toString(36).substring(2, 10);
-
-        // Ссылка на документ комнаты в Firestore
         const roomRef = doc(db, 'rooms', roomId);
 
-        // Плеер Plyr
+        // Плеер (может быть Plyr для MP4 или объект YouTube)
         let player = null;
-
-        // Флаг: игнорировать следующее обновление состояния (чтобы избежать петель)
-        let ignoreNextUpdate = false;
-
-        // Время последней локальной синхронизации
+        let playerType = null; // 'youtube', 'vimeo', 'mp4'
+        let youtubePlayer = null; // объект YT.Player
+        let ignorePlayerEvents = false; // флаг, чтобы не отправлять изменения, вызванные синхронизацией
         let lastSyncTime = 0;
-
-        // Последний загруженный URL видео (для предотвращения повторной загрузки)
         let lastLoadedVideoUrl = '';
 
-        // Дебаунс для updatePlayerState
-        let pendingUpdate = null;
-
-        // Время, до которого игнорируем синхронизацию (после загрузки видео)
-        let blockSyncUntil = 0;
-
-        // ============================================================
-        // ===== ЭЛЕМЕНТЫ DOM =====
-        // ============================================================
-
+        // Элементы DOM
         const backBtn = document.getElementById('backBtn');
         const roomIdText = document.getElementById('roomIdText');
         const roomIdDisplay = document.getElementById('roomIdDisplay');
@@ -570,13 +503,11 @@
         const participantsList = document.getElementById('participantsList');
         const errorToast = document.getElementById('errorToast');
 
-        // ============================================================
-        // ===== ИНИЦИАЛИЗАЦИЯ =====
-        // ============================================================
+        const videoEl = document.getElementById('player');
+        const embedEl = document.getElementById('playerEmbed');
 
-        // Проверяем, что ID комнаты есть
         if (!roomId) {
-            showError('ID комнаты не указан.');
+            showError('ID комнаты не указан');
             setTimeout(() => window.location.href = 'index.html', 2000);
         } else {
             roomIdText.textContent = roomId;
@@ -585,668 +516,334 @@
             initRoom();
         }
 
-        backBtn.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-
+        backBtn.addEventListener('click', () => window.location.href = 'index.html');
         roomIdDisplay.addEventListener('click', () => {
-            navigator.clipboard.writeText(roomId).then(() => {
-                showToast('ID скопирован!');
-            });
+            navigator.clipboard.writeText(roomId).then(() => showToast('ID скопирован!'));
         });
 
-        // ============================================================
-        // ===== ИНИЦИАЛИЗАЦИЯ КОМНАТЫ =====
-        // ============================================================
-
+        // ========== Инициализация комнаты ==========
         async function initRoom() {
             try {
                 console.log('Инициализация комнаты:', roomId);
-                
-                // Проверяем, существует ли комната
                 const roomSnap = await getDoc(roomRef);
-
                 if (!roomSnap.exists()) {
-                    // Создаём новую комнату с дефолтными значениями
                     await setDoc(roomRef, {
                         videoUrl: '',
-                        playerState: {
-                            isPlaying: false,
-                            currentTime: 0,
-                            timestamp: Date.now()
-                        },
+                        playerState: { isPlaying: false, currentTime: 0, timestamp: Date.now() },
                         messages: [],
                         participants: {},
                         createdAt: serverTimestamp()
                     });
-                    console.log('Комната создана.');
+                    console.log('Комната создана');
                 } else {
-                    console.log('Комната найдена.');
+                    console.log('Комната найдена');
                 }
 
-                // Инициализируем плеер
-                initPlayer();
-
-                // Если в комнате уже есть видео — загружаем его ДО подписки
-                const roomSnap2 = await getDoc(roomRef);
-                if (roomSnap2.exists()) {
-                    const data = roomSnap2.data();
-                    if (data.videoUrl) {
-                        console.log('Загружаю существующее видео:', data.videoUrl);
-                        await loadVideo(data.videoUrl, true);
-                    }
+                // Загружаем существующее видео, если есть
+                const data = (await getDoc(roomRef)).data();
+                if (data && data.videoUrl) {
+                    await loadVideo(data.videoUrl, true);
                 }
 
-                // Подписываемся на обновления комнаты (после загрузки видео)
                 subscribeToRoom();
-
-                // Регистрируем присутствие
                 registerPresence();
-
-            } catch (error) {
-                console.error('Ошибка инициализации:', error);
-                showError('Ошибка подключения к комнате: ' + error.message);
+            } catch (e) {
+                console.error('Ошибка инициализации:', e);
+                showError('Ошибка подключения к комнате');
             }
         }
 
-        // ============================================================
-        // ===== ИНИЦИАЛИЗАЦИЯ ПЛЕЕРА =====
-        // ============================================================
-
-        function initPlayer() {
-            // Создаём заглушку плеера до загрузки видео
-            const videoEl = document.getElementById('player');
-            const embedEl = document.getElementById('playerEmbed');
-
-            videoEl.style.display = 'block';
-            embedEl.style.display = 'none';
-
-            player = new Plyr('#player', {
-                controls: [
-                    'play-large', 'play', 'progress', 'current-time',
-                    'duration', 'mute', 'volume', 'settings', 'fullscreen'
-                ],
-                settings: ['quality', 'speed'],
-                speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
-            });
-
-            setupPlayerHandlers();
-
-            console.log('Плеер инициализирован, ожидание видео...');
-        }
-
-        // ============================================================
-        // ===== ОБНОВЛЕНИЕ СОСТОЯНИЯ В FIREBASE =====
-        // ============================================================
-
-        /**
-         * Обновляет состояние плеера в Firestore.
-         * @param {boolean} isPlaying - Воспроизводится ли видео
-         */
-        async function updatePlayerState(isPlaying) {
-            if (!player) return;
-            if (typeof player.duration !== 'number') return;
-
-            if (pendingUpdate) clearTimeout(pendingUpdate);
-            pendingUpdate = setTimeout(async () => {
-                try {
-                    await updateDoc(roomRef, {
-                        playerState: {
-                            isPlaying: isPlaying,
-                            currentTime: player.currentTime || 0,
-                            timestamp: Date.now()
-                        }
-                    });
-                } catch (error) {
-                    console.error('Ошибка обновления состояния:', error);
-                }
-                pendingUpdate = null;
-            }, 500);
-        }
-
-        // ============================================================
-        // ===== ПОДПИСКА НА ОБНОВЛЕНИЯ КОМНАТЫ =====
-        // ============================================================
-
+        // ========== Подписка на Firestore ==========
         function subscribeToRoom() {
             onSnapshot(roomRef, (docSnap) => {
-                if (!docSnap.exists()) {
-                    showError('Комната не найдена.');
-                    return;
-                }
-
+                if (!docSnap.exists()) return;
                 const data = docSnap.data();
-
-                // Обновляем список участников
                 updateParticipants(data.participants || {});
-
-                // Обновляем сообщения чата
                 updateChat(data.messages || []);
-
-                // Синхронизируем состояние плеера
                 syncPlayerState(data.playerState);
-
-                // Обновляем видео, если URL изменился (сравниваем с lastLoadedVideoUrl)
                 if (data.videoUrl && data.videoUrl !== lastLoadedVideoUrl) {
-                    loadVideo(data.videoUrl, true); // fromSync = true
+                    loadVideo(data.videoUrl, true);
                 }
-            }, (error) => {
-                console.error('Ошибка подписки:', error);
-                showError('Ошибка синхронизации с комнатой.');
             });
         }
 
-        // ============================================================
-        // ===== СИНХРОНИЗАЦИЯ ПЛЕЕРА =====
-        // ============================================================
-
-        /**
-         * Синхронизирует локальный плеер с состоянием из Firestore.
-         * Избегает петель синхронизации.
-         */
+        // ========== Синхронизация состояния ==========
         function syncPlayerState(playerState) {
             if (!playerState || !player) return;
-            if (Date.now() < blockSyncUntil) return;
-
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
-
             if (now - timestamp > 8000) return;
-            if (now - lastSyncTime < 1500) return;
-            if (!player.duration || player.duration <= 0) return;
+            if (now - lastSyncTime < 1000) return;
 
-            const timeDiff = Math.abs(player.currentTime - currentTime);
-            if (timeDiff > 2.0) {
-                ignoreNextUpdate = true;
-                player.currentTime = currentTime;
-                setTimeout(() => { ignoreNextUpdate = false; }, 400);
+            if (playerType === 'youtube' && youtubePlayer) {
+                const playerCurrentTime = youtubePlayer.getCurrentTime();
+                const playerIsPlaying = youtubePlayer.getPlayerState() === YT.PlayerState.PLAYING;
+                
+                // Перемотка
+                if (Math.abs(playerCurrentTime - currentTime) > 1.5) {
+                    ignorePlayerEvents = true;
+                    youtubePlayer.seekTo(currentTime, true);
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                }
+                // Play/Pause
+                if (isPlaying && !playerIsPlaying) {
+                    ignorePlayerEvents = true;
+                    youtubePlayer.playVideo();
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                } else if (!isPlaying && playerIsPlaying) {
+                    ignorePlayerEvents = true;
+                    youtubePlayer.pauseVideo();
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                }
+            } else if (playerType === 'mp4' && player) {
+                if (!player.duration) return;
+                const timeDiff = Math.abs(player.currentTime - currentTime);
+                if (timeDiff > 1.5) {
+                    ignorePlayerEvents = true;
+                    player.currentTime = currentTime;
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                }
+                if (isPlaying && !player.playing) {
+                    ignorePlayerEvents = true;
+                    player.play().catch(() => {});
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                } else if (!isPlaying && player.playing) {
+                    ignorePlayerEvents = true;
+                    player.pause();
+                    setTimeout(() => ignorePlayerEvents = false, 200);
+                }
             }
-
-            if (isPlaying && !player.playing) {
-                ignoreNextUpdate = true;
-                player.play().catch(() => {});
-                setTimeout(() => { ignoreNextUpdate = false; }, 400);
-            } else if (!isPlaying && player.playing) {
-                ignoreNextUpdate = true;
-                player.pause();
-                setTimeout(() => { ignoreNextUpdate = false; }, 400);
-            }
-
             lastSyncTime = now;
         }
 
-        // ============================================================
-        // ===== ЗАГРУЗКА ВИДЕО =====
-        // ============================================================
-
-        /**
-         * Определяет тип видео по URL.
-         * @param {string} url - Ссылка на видео
-         * @returns {string} 'youtube', 'vimeo', 'mp4' или null
-         */
+        // ========== Загрузка видео ==========
         function detectVideoType(url) {
             if (!url) return null;
-            
-            // YouTube
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                return 'youtube';
-            }
-            
-            // Vimeo
-            if (url.includes('vimeo.com')) {
-                return 'vimeo';
-            }
-            
-            // Прямая ссылка на MP4
-            if (url.includes('.mp4') || url.includes('.m4v')) {
-                return 'mp4';
-            }
-
-            // Если ссылка не распознана, пробуем как MP4
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+            if (url.includes('vimeo.com')) return 'vimeo';
+            if (url.includes('.mp4') || url.includes('.m4v')) return 'mp4';
             return 'mp4';
         }
 
-        /**
-         * Загружает видео в плеер и обновляет Firestore.
-         * @param {string} url - Ссылка на видео
-         * @param {boolean} fromSync - Если true, не обновлять Firestore (загрузка из подписки)
-         */
-        async function loadVideo(url, fromSync = false) {
-            const type = detectVideoType(url);
-
-            if (!type) {
-                showError('Неподдерживаемый формат видео.');
-                return;
-            }
-
-            try {
-                lastLoadedVideoUrl = url;
-
-                const videoEl = document.getElementById('player');
-                const embedEl = document.getElementById('playerEmbed');
-
-                // Уничтожаем старый Plyr
-                if (player) {
-                    player.destroy();
-                    player = null;
-                }
-
-                // Полностью скрываем оба контейнера перед переключением
-                videoEl.style.display = 'none';
-                embedEl.style.display = 'none';
-                embedEl.innerHTML = '';
-
-                // Находим и скрываем все Plyr-обёртки
-                document.querySelectorAll('.plyr').forEach(el => {
-                    el.style.display = 'none';
-                });
-
-                if (type === 'youtube') {
-                    const videoId = extractYouTubeId(url);
-                    if (!videoId) {
-                        showError('Неверная ссылка на YouTube.');
-                        return;
-                    }
-
-                    // Показываем embed контейнер
-                    embedEl.style.display = 'block';
-
-                    // Создаём контейнер с правильными data-атрибутами
-                    const div = document.createElement('div');
-                    div.setAttribute('data-plyr-provider', 'youtube');
-                    div.setAttribute('data-plyr-embed-id', videoId);
-                    embedEl.appendChild(div);
-
-                    player = new Plyr(div, {
-                        controls: [
-                            'play-large', 'play', 'progress', 'current-time',
-                            'duration', 'mute', 'volume', 'settings', 'fullscreen'
-                        ],
-                        settings: ['quality', 'speed'],
-                        youtube: {
-                            noCookie: true,
-                            rel: 0,
-                            showinfo: 0,
-                            iv_load_policy: 3,
-                            modestbranding: 1,
-                            playsinline: 1
-                        }
-                    });
-
-                    // Обработка ошибок YouTube
-                    player.on('error', (e) => {
-                        console.error('YouTube ошибка:', e);
-                        showError('Видео недоступно для встраивания. Попробуйте MP4 ссылку.');
-                    });
-
-                    // Таймаут на случай, если видео не загружается
-                    setTimeout(() => {
-                        if (player && player.duration === 0) {
-                            showError('Видео заблокировано для встраивания. Попробуйте другое или используйте MP4.');
-                        }
-                    }, 10000);
-
-                    setupPlayerHandlers();
-                    blockSyncUntil = Date.now() + 2000;
-
-                } else if (type === 'vimeo') {
-                    const videoId = extractVimeoId(url);
-                    if (!videoId) {
-                        showError('Неверная ссылка на Vimeo.');
-                        return;
-                    }
-
-                    // Показываем embed контейнер
-                    embedEl.style.display = 'block';
-
-                    const div = document.createElement('div');
-                    div.setAttribute('data-plyr-provider', 'vimeo');
-                    div.setAttribute('data-plyr-embed-id', videoId);
-                    embedEl.appendChild(div);
-
-                    player = new Plyr(div, {
-                        controls: [
-                            'play-large', 'play', 'progress', 'current-time',
-                            'duration', 'mute', 'volume', 'settings', 'fullscreen'
-                        ],
-                        settings: ['quality', 'speed']
-                    });
-
-                    setupPlayerHandlers();
-                    blockSyncUntil = Date.now() + 2000;
-
-                } else if (type === 'mp4') {
-                    // Показываем video элемент
-                    videoEl.style.display = 'block';
-
-                    player = new Plyr('#player', {
-                        controls: [
-                            'play-large', 'play', 'progress', 'current-time',
-                            'duration', 'mute', 'volume', 'settings', 'fullscreen'
-                        ],
-                        settings: ['quality', 'speed'],
-                        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
-                    });
-
-                    player.source = {
-                        type: 'video',
-                        sources: [{
-                            src: url,
-                            type: 'video/mp4'
-                        }]
-                    };
-
-                    setupPlayerHandlers();
-                }
-
-                // Обновляем Firestore только если это не загрузка из подписки
-                if (!fromSync) {
-                    await updateDoc(roomRef, {
-                        videoUrl: url,
-                        playerState: {
-                            isPlaying: false,
-                            currentTime: 0,
-                            timestamp: Date.now()
-                        },
-                        messages: arrayUnion({
-                            system: true,
-                            text: `${nickname} загрузил новое видео.`,
-                            timestamp: Date.now()
-                        })
-                    });
-                }
-
-                console.log('Видео загружено:', url, 'тип:', type, fromSync ? '(синхронизация)' : '');
-
-            } catch (error) {
-                console.error('Ошибка загрузки видео:', error);
-                if (error.code === 'unavailable') {
-                    showError('Нет подключения к Firebase. Проверьте интернет.');
-                } else {
-                    showError('Ошибка загрузки видео: ' + error.message);
-                }
-            }
-        }
-
-        /**
-         * Подписывает обработчики событий плеера.
-         */
-        function setupPlayerHandlers() {
-            if (!player) return;
-
-            player.on('play', () => {
-                if (!ignoreNextUpdate) {
-                    updatePlayerState(true);
-                }
-            });
-
-            player.on('pause', () => {
-                if (!ignoreNextUpdate) {
-                    updatePlayerState(false);
-                }
-            });
-
-            player.on('seeked', () => {
-                if (!ignoreNextUpdate) {
-                    updatePlayerState(player.playing);
-                }
-            });
-
-            player.on('error', (error) => {
-                console.error('Ошибка плеера:', error);
-                showError('Не удалось загрузить видео. Проверьте ссылку.');
-            });
-
-            player.on('ready', () => {
-                console.log('Плеер готов');
-            });
-
-            player.on('loadedmetadata', () => {
-                console.log('Метаданные видео загружены, длительность:', player.duration);
-            });
-
-            player.on('canplay', () => {
-                console.log('Видео готово к воспроизведению');
-            });
-        }
-
-        /**
-         * Извлекает ID видео из YouTube URL.
-         */
         function extractYouTubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        /**
-         * Извлекает ID видео из Vimeo URL.
-         */
         function extractVimeoId(url) {
             const regExp = /vimeo.com\/(\d+)/;
             const match = url.match(regExp);
             return match ? match[1] : null;
         }
 
-        // ============================================================
-        // ===== ОБРАБОТКА ФОРМЫ ЗАГРУЗКИ ВИДЕО =====
-        // ============================================================
+        async function loadVideo(url, fromSync = false) {
+            const type = detectVideoType(url);
+            if (!type) return showError('Неподдерживаемый формат');
 
+            try {
+                lastLoadedVideoUrl = url;
+                playerType = type;
+
+                // Уничтожаем предыдущий плеер
+                if (player) {
+                    if (playerType === 'mp4') player.destroy();
+                    player = null;
+                }
+                if (youtubePlayer) {
+                    youtubePlayer.destroy();
+                    youtubePlayer = null;
+                }
+
+                // Скрываем всё
+                videoEl.style.display = 'none';
+                embedEl.style.display = 'none';
+                embedEl.innerHTML = '';
+                document.querySelectorAll('.plyr').forEach(el => el.style.display = 'none');
+
+                // === YouTube ===
+                if (type === 'youtube') {
+                    const videoId = extractYouTubeId(url);
+                    if (!videoId) throw new Error('Неверная ссылка YouTube');
+                    
+                    embedEl.style.display = 'block';
+                    embedEl.innerHTML = `<div id="yt-player-container"></div>`;
+
+                    // Ждём загрузки API и создаём плеер
+                    if (!window.YT) {
+                        // Если API ещё не загрузилось, подождём
+                        await new Promise(resolve => {
+                            const check = () => {
+                                if (window.YT && YT.Player) resolve();
+                                else setTimeout(check, 100);
+                            };
+                            check();
+                        });
+                    }
+
+                    youtubePlayer = new YT.Player('yt-player-container', {
+                        videoId: videoId,
+                        playerVars: { autoplay: 0, controls: 1, modestbranding: 1, rel: 0 },
+                        events: {
+                            onReady: () => console.log('YouTube плеер готов'),
+                            onStateChange: (event) => {
+                                if (ignorePlayerEvents) return;
+                                // Отправляем состояние в Firestore только при реальных действиях
+                                const state = event.data;
+                                if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.PAUSED) {
+                                    updatePlayerStateToFirestore(state === YT.PlayerState.PLAYING);
+                                }
+                            }
+                        }
+                    });
+                    player = { dummy: true }; // заглушка
+                }
+                // === Vimeo (упрощённо через iframe без API) ===
+                else if (type === 'vimeo') {
+                    const videoId = extractVimeoId(url);
+                    if (!videoId) throw new Error('Неверная ссылка Vimeo');
+                    embedEl.style.display = 'block';
+                    embedEl.innerHTML = `<iframe src="https://player.vimeo.com/video/${videoId}?title=0&byline=0&portrait=0" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+                    player = { dummy: true };
+                }
+                // === MP4 (Plyr) ===
+                else if (type === 'mp4') {
+                    videoEl.style.display = 'block';
+                    player = new Plyr('#player', {
+                        controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'fullscreen'],
+                        settings: ['quality', 'speed'],
+                        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+                    });
+                    player.source = { type: 'video', sources: [{ src: url, type: 'video/mp4' }] };
+                    
+                    player.on('play', () => { if (!ignorePlayerEvents) updatePlayerStateToFirestore(true); });
+                    player.on('pause', () => { if (!ignorePlayerEvents) updatePlayerStateToFirestore(false); });
+                    player.on('seeked', () => { if (!ignorePlayerEvents) updatePlayerStateToFirestore(player.playing); });
+                }
+
+                // Обновляем Firestore (если не синхронизация)
+                if (!fromSync) {
+                    await updateDoc(roomRef, {
+                        videoUrl: url,
+                        playerState: { isPlaying: false, currentTime: 0, timestamp: Date.now() },
+                        messages: arrayUnion({ system: true, text: `${nickname} загрузил новое видео`, timestamp: Date.now() })
+                    });
+                }
+                console.log('Видео загружено:', url, type);
+            } catch (e) {
+                console.error('Ошибка загрузки:', e);
+                showError(e.message);
+            }
+        }
+
+        // Отправка состояния в Firestore
+        async function updatePlayerStateToFirestore(isPlaying) {
+            if (!playerType) return;
+            let currentTime = 0;
+            if (playerType === 'youtube' && youtubePlayer) {
+                currentTime = youtubePlayer.getCurrentTime();
+            } else if (playerType === 'mp4' && player) {
+                currentTime = player.currentTime;
+            }
+            try {
+                await updateDoc(roomRef, {
+                    playerState: { isPlaying, currentTime, timestamp: Date.now() }
+                });
+            } catch (e) {
+                console.error('Ошибка обновления состояния:', e);
+            }
+        }
+
+        // ========== Обработка формы ==========
         videoForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const url = videoUrlInput.value.trim();
-            if (url) {
-                loadBtn.disabled = true;
-                loadBtn.textContent = 'Загрузка...';
-                loadVideo(url).finally(() => {
-                    loadBtn.disabled = false;
-                    loadBtn.textContent = 'Загрузить';
-                });
-                videoUrlInput.value = '';
-            }
+            if (!url) return;
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Загрузка...';
+            loadVideo(url).finally(() => {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Загрузить';
+            });
+            videoUrlInput.value = '';
         });
 
-        // ============================================================
-        // ===== ЧАТ =====
-        // ============================================================
-
+        // ========== Чат ==========
         let lastMessageCount = 0;
-
-        /**
-         * Обновляет список сообщений в чате.
-         */
         function updateChat(messages) {
             if (messages.length <= lastMessageCount) return;
             lastMessageCount = messages.length;
-
             chatMessages.innerHTML = '';
-
             messages.forEach(msg => {
                 const div = document.createElement('div');
-
                 if (msg.system) {
                     div.className = 'msg sys';
                     div.textContent = msg.text;
                 } else {
                     div.className = 'msg';
-                    const time = msg.timestamp
-                        ? new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-                        : '';
-                    div.innerHTML = `
-                        <span class="u">${escapeHtml(msg.user)}</span>
-                        <span class="t">${escapeHtml(msg.text)}</span>
-                        <span class="time">${time}</span>
-                    `;
+                    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
+                    div.innerHTML = `<span class="u">${escapeHtml(msg.user)}</span><span class="t">${escapeHtml(msg.text)}</span><span class="time">${time}</span>`;
                 }
-
                 chatMessages.appendChild(div);
             });
-
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        /**
-         * Добавляет системное сообщение в чат.
-         */
-        async function addSystemMessage(text) {
-            try {
-                await updateDoc(roomRef, {
-                    messages: arrayUnion({
-                        system: true,
-                        text: text,
-                        timestamp: Date.now()
-                    })
-                });
-            } catch (error) {
-                console.error('Ошибка добавления сообщения:', error);
-            }
-        }
-
-        // Отправка сообщения в чат
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = chatInput.value.trim();
             if (!text) return;
-
             try {
                 await updateDoc(roomRef, {
-                    messages: arrayUnion({
-                        user: nickname,
-                        text: text,
-                        timestamp: Date.now()
-                    })
+                    messages: arrayUnion({ user: nickname, text, timestamp: Date.now() })
                 });
                 chatInput.value = '';
-            } catch (error) {
-                console.error('Ошибка отправки сообщения:', error);
-                showError('Не удалось отправить сообщение.');
+            } catch (e) {
+                showError('Не удалось отправить сообщение');
             }
         });
 
-        // ============================================================
-        // ===== УПРАВЛЕНИЕ ПРИСУТСТВИЕМ =====
-        // ============================================================
-
-        /**
-         * Регистрирует присутствие пользователя в комнате.
-         * Использует heartbeat для отслеживания онлайна.
-         */
+        // ========== Участники ==========
         async function registerPresence() {
-            // При входе добавляем себя
-            await updateDoc(roomRef, {
-                [`participants.${userId}`]: {
-                    nickname: nickname,
-                    lastSeen: Date.now()
-                }
-            });
-
-            // Heartbeat каждые 5 секунд
+            await updateDoc(roomRef, { [`participants.${userId}`]: { nickname, lastSeen: Date.now() } });
             const heartbeat = setInterval(async () => {
-                try {
-                    await updateDoc(roomRef, {
-                        [`participants.${userId}`]: {
-                            nickname: nickname,
-                            lastSeen: Date.now()
-                        }
-                    });
-                } catch (error) {
-                    console.error('Ошибка heartbeat:', error);
-                }
+                await updateDoc(roomRef, { [`participants.${userId}.lastSeen`]: Date.now() });
             }, 5000);
-
-            // При уходе удаляем себя
-            window.addEventListener('beforeunload', async () => {
+            window.addEventListener('beforeunload', () => {
                 clearInterval(heartbeat);
-                try {
-                    await updateDoc(roomRef, {
-                        [`participants.${userId}`]: deleteField()
-                    });
-                } catch (error) {
-                    // Игнорируем ошибки при выходе
-                }
+                updateDoc(roomRef, { [`participants.${userId}`]: deleteField() });
             });
-
-            // Периодическая очистка оффлайн-участников (> 15 секунд неактивности)
-            setInterval(async () => {
-                try {
-                    const roomSnap = await getDoc(roomRef);
-                    if (roomSnap.exists()) {
-                        const data = roomSnap.data();
-                        const participants = data.participants || {};
-                        const now = Date.now();
-                        const updates = {};
-
-                        for (const [uid, pdata] of Object.entries(participants)) {
-                            if (now - pdata.lastSeen > 15000) {
-                                updates[`participants.${uid}`] = deleteField();
-                            }
-                        }
-
-                        if (Object.keys(updates).length > 0) {
-                            await updateDoc(roomRef, updates);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Ошибка очистки участников:', error);
-                }
-            }, 10000);
         }
 
-        /**
-         * Обновляет список участников на экране.
-         */
         function updateParticipants(participants) {
             participantsList.innerHTML = '';
-
             const now = Date.now();
-            const onlineParticipants = Object.entries(participants)
-                .filter(([_, pdata]) => now - pdata.lastSeen < 15000)
-                .sort((a, b) => a[1].nickname.localeCompare(b[1].nickname));
-
-            onlineParticipants.forEach(([uid, pdata]) => {
-                const div = document.createElement('div');
-                div.className = 'member';
-                div.innerHTML = `
-                    <div class="member-dot"></div>
-                    <span>${escapeHtml(pdata.nickname)}${uid === userId ? ' (Вы)' : ''}</span>
-                `;
-                participantsList.appendChild(div);
-            });
-
-            if (onlineParticipants.length === 0) {
-                const div = document.createElement('div');
-                div.className = 'member';
-                div.style.color = 'var(--text-dim)';
-                div.textContent = 'Нет участников';
-                participantsList.appendChild(div);
-            }
+            Object.entries(participants)
+                .filter(([_, p]) => now - p.lastSeen < 15000)
+                .sort((a, b) => a[1].nickname.localeCompare(b[1].nickname))
+                .forEach(([uid, p]) => {
+                    const div = document.createElement('div');
+                    div.className = 'member';
+                    div.innerHTML = `<div class="member-dot"></div><span>${escapeHtml(p.nickname)}${uid === userId ? ' (Вы)' : ''}</span>`;
+                    participantsList.appendChild(div);
+                });
         }
 
-        // ============================================================
-        // ===== УТИЛИТЫ =====
-        // ============================================================
-
-        /**
-         * Экранирует HTML-символы для безопасности.
-         */
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        /**
-         * Показывает сообщение об ошибке.
-         */
-        function showError(message) {
-            errorToast.textContent = message;
+        function showError(msg) {
+            errorToast.textContent = msg;
             errorToast.style.background = 'var(--red)';
             errorToast.classList.add('show');
             setTimeout(() => errorToast.classList.remove('show'), 4000);
         }
 
-        function showToast(message) {
-            errorToast.textContent = message;
+        function showToast(msg) {
+            errorToast.textContent = msg;
             errorToast.style.background = 'var(--green)';
             errorToast.classList.add('show');
             setTimeout(() => {
