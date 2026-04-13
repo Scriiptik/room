@@ -546,8 +546,8 @@
         // Последний загруженный URL видео (для предотвращения повторной загрузки)
         let lastLoadedVideoUrl = '';
 
-        // Флаг: идёт ли сейчас загрузка видео (блокирует синхронизацию)
-        let isLoadingVideo = false;
+        // Дебаунс для updatePlayerState
+        let pendingUpdate = null;
 
         // ============================================================
         // ===== ЭЛЕМЕНТЫ DOM =====
@@ -683,17 +683,22 @@
         async function updatePlayerState(isPlaying) {
             if (!player) return;
             if (typeof player.duration !== 'number') return;
-            try {
-                await updateDoc(roomRef, {
-                    playerState: {
-                        isPlaying: isPlaying,
-                        currentTime: player.currentTime || 0,
-                        timestamp: Date.now()
-                    }
-                });
-            } catch (error) {
-                console.error('Ошибка обновления состояния:', error);
-            }
+
+            if (pendingUpdate) clearTimeout(pendingUpdate);
+            pendingUpdate = setTimeout(async () => {
+                try {
+                    await updateDoc(roomRef, {
+                        playerState: {
+                            isPlaying: isPlaying,
+                            currentTime: player.currentTime || 0,
+                            timestamp: Date.now()
+                        }
+                    });
+                } catch (error) {
+                    console.error('Ошибка обновления состояния:', error);
+                }
+                pendingUpdate = null;
+            }, 300);
         }
 
         // ============================================================
@@ -739,47 +744,30 @@
         function syncPlayerState(playerState) {
             if (!playerState || !player) return;
 
-            // Блокируем синхронизацию во время загрузки видео
-            if (isLoadingVideo) return;
-
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
 
-            // Игнорируем устаревшие (>10 сек) события
+            // Игнорируем устаревшие (>10 сек) или слишком частые события
             if (now - timestamp > 10000) return;
+            if (now - lastSyncTime < 800) return;
 
-            // Увеличенный интервал синхронизации (1000 мс вместо 500)
-            // чтобы избежать рывков при старте и паузе
-            if (now - lastSyncTime < 1000) return;
+            // Плеер должен быть готов
+            if (!player.duration || player.duration <= 0) return;
 
-            // Для embed-видео duration может быть ещё не определена
-            if (typeof player.duration !== 'number' || player.duration <= 0) return;
-
-            // Синхронизация времени (порог 2 секунды вместо 1)
+            // Синхронизация времени
             const timeDiff = Math.abs(player.currentTime - currentTime);
-            if (timeDiff > 2) {
+            if (timeDiff > 1.5) {
                 ignoreNextUpdate = true;
                 player.currentTime = currentTime;
-                // Сбрасываем флаг через 200 мс
-                setTimeout(() => { ignoreNextUpdate = false; }, 200);
             }
 
             // Синхронизация play/pause
             if (isPlaying && !player.playing) {
                 ignoreNextUpdate = true;
-                if (typeof player.play === 'function') {
-                    const result = player.play();
-                    if (result && typeof result.catch === 'function') {
-                        result.catch(() => {});
-                    }
-                }
-                setTimeout(() => { ignoreNextUpdate = false; }, 500);
+                player.play().catch(() => {});
             } else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
-                if (typeof player.pause === 'function') {
-                    player.pause();
-                }
-                setTimeout(() => { ignoreNextUpdate = false; }, 500);
+                player.pause();
             }
 
             lastSyncTime = now;
@@ -831,7 +819,6 @@
 
             try {
                 lastLoadedVideoUrl = url;
-                isLoadingVideo = true; // Блокируем синхронизацию
 
                 const videoEl = document.getElementById('player');
                 const embedEl = document.getElementById('playerEmbed');
@@ -856,7 +843,6 @@
                     const videoId = extractYouTubeId(url);
                     if (!videoId) {
                         showError('Неверная ссылка на YouTube.');
-                        isLoadingVideo = false;
                         return;
                     }
 
@@ -904,7 +890,6 @@
                     const videoId = extractVimeoId(url);
                     if (!videoId) {
                         showError('Неверная ссылка на Vimeo.');
-                        isLoadingVideo = false;
                         return;
                     }
 
@@ -950,11 +935,6 @@
                     setupPlayerHandlers();
                 }
 
-                // Разблокируем синхронизацию через 1 секунду (плеер успеет инициализироваться)
-                setTimeout(() => {
-                    isLoadingVideo = false;
-                }, 1000);
-
                 // Обновляем Firestore только если это не загрузка из подписки
                 if (!fromSync) {
                     await updateDoc(roomRef, {
@@ -975,7 +955,6 @@
                 console.log('Видео загружено:', url, 'тип:', type, fromSync ? '(синхронизация)' : '');
 
             } catch (error) {
-                isLoadingVideo = false;
                 console.error('Ошибка загрузки видео:', error);
                 if (error.code === 'unavailable') {
                     showError('Нет подключения к Firebase. Проверьте интернет.');
@@ -995,18 +974,21 @@
                 if (!ignoreNextUpdate) {
                     updatePlayerState(true);
                 }
+                ignoreNextUpdate = false;
             });
 
             player.on('pause', () => {
                 if (!ignoreNextUpdate) {
                     updatePlayerState(false);
                 }
+                ignoreNextUpdate = false;
             });
 
             player.on('seeked', () => {
                 if (!ignoreNextUpdate) {
                     updatePlayerState(player.playing);
                 }
+                ignoreNextUpdate = false;
             });
 
             player.on('error', (error) => {
