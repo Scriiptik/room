@@ -751,14 +751,10 @@
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
 
-            // Игнорируем старые и слишком частые обновления
             if (now - timestamp > 8000) return;
-            if (now - lastSyncTime < 1000) return;
-
-            // Плеер должен быть готов
+            if (now - lastSyncTime < 1500) return;
             if (!player.duration || player.duration <= 0) return;
 
-            // Синхронизация времени (перемотка)
             const timeDiff = Math.abs(player.currentTime - currentTime);
             if (timeDiff > 2.0) {
                 ignoreNextUpdate = true;
@@ -766,10 +762,12 @@
                 setTimeout(() => { ignoreNextUpdate = false; }, 400);
             }
 
-            // Синхронизация play/pause
             if (isPlaying && !player.playing) {
                 ignoreNextUpdate = true;
-                player.play().catch(() => {});
+                const playPromise = player.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
                 setTimeout(() => { ignoreNextUpdate = false; }, 400);
             } else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
@@ -869,7 +867,7 @@
                         ],
                         settings: ['quality', 'speed'],
                         youtube: {
-                            noCookie: true,
+                            noCookie: false,
                             rel: 0,
                             showinfo: 0,
                             iv_load_policy: 3,
