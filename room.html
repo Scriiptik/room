@@ -549,6 +549,9 @@
         // Дебаунс для updatePlayerState
         let pendingUpdate = null;
 
+        // Время, до которого игнорируем синхронизацию (после загрузки видео)
+        let blockSyncUntil = 0;
+
         // ============================================================
         // ===== ЭЛЕМЕНТЫ DOM =====
         // ============================================================
@@ -743,6 +746,7 @@
          */
         function syncPlayerState(playerState) {
             if (!playerState || !player) return;
+            if (Date.now() < blockSyncUntil) return;
 
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
@@ -756,7 +760,7 @@
 
             // Синхронизация времени (перемотка)
             const timeDiff = Math.abs(player.currentTime - currentTime);
-            if (timeDiff > 1.5) {
+            if (timeDiff > 2.0) {
                 ignoreNextUpdate = true;
                 player.currentTime = currentTime;
                 setTimeout(() => { ignoreNextUpdate = false; }, 400);
@@ -888,6 +892,7 @@
                     }, 10000);
 
                     setupPlayerHandlers();
+                    blockSyncUntil = Date.now() + 2000;
 
                 } else if (type === 'vimeo') {
                     const videoId = extractVimeoId(url);
@@ -913,6 +918,7 @@
                     });
 
                     setupPlayerHandlers();
+                    blockSyncUntil = Date.now() + 2000;
 
                 } else if (type === 'mp4') {
                     // Показываем video элемент
