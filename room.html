@@ -795,17 +795,15 @@
                         return;
                     }
 
-                    // Сначала показываем контейнер, потом создаём Plyr
                     embedEl.innerHTML = '';
                     embedEl.style.display = 'block';
                     videoEl.style.display = 'none';
 
-                    // Создаём элемент div для YouTube
+                    // Создаём контейнер с правильными data-атрибутами
                     const div = document.createElement('div');
+                    div.setAttribute('data-plyr-provider', 'youtube');
+                    div.setAttribute('data-plyr-embed-id', videoId);
                     embedEl.appendChild(div);
-
-                    // Ждём, чтобы DOM обновился
-                    await new Promise(resolve => setTimeout(resolve, 100));
 
                     player = new Plyr(div, {
                         controls: [
@@ -814,25 +812,13 @@
                         ],
                         settings: ['quality', 'speed'],
                         youtube: {
-                            noCookie: true,
+                            noCookie: false,
                             rel: 0,
                             showinfo: 0,
                             iv_load_policy: 3,
-                            modestbranding: 1,
-                            playsinline: 1
+                            modestbranding: 1
                         }
                     });
-
-                    // Устанавливаем источник через Plyr API
-                    player.source = {
-                        type: 'video',
-                        sources: [
-                            {
-                                src: videoId,
-                                provider: 'youtube'
-                            }
-                        ]
-                    };
 
                     // Обработка ошибок YouTube
                     player.on('error', (e) => {
@@ -840,7 +826,7 @@
                         showError('Видео недоступно для встраивания. Попробуйте MP4 ссылку.');
                     });
 
-                    // Таймаут: если через 10 секунд duration = 0, видео заблокировано
+                    // Таймаут на случай, если видео не загружается
                     setTimeout(() => {
                         if (player && player.duration === 0) {
                             showError('Видео заблокировано для встраивания. Попробуйте другое или используйте MP4.');
@@ -854,9 +840,9 @@
                         return;
                     }
 
-                    videoEl.style.display = 'none';
-                    embedEl.style.display = 'block';
                     embedEl.innerHTML = '';
+                    embedEl.style.display = 'block';
+                    videoEl.style.display = 'none';
 
                     const div = document.createElement('div');
                     div.setAttribute('data-plyr-provider', 'vimeo');
