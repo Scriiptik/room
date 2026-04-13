@@ -698,7 +698,7 @@
                     console.error('Ошибка обновления состояния:', error);
                 }
                 pendingUpdate = null;
-            }, 300);
+            }, 500);
         }
 
         // ============================================================
@@ -747,27 +747,30 @@
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
 
-            // Игнорируем устаревшие (>10 сек) или слишком частые события
-            if (now - timestamp > 10000) return;
-            if (now - lastSyncTime < 800) return;
+            // Игнорируем старые и слишком частые обновления
+            if (now - timestamp > 8000) return;
+            if (now - lastSyncTime < 1000) return;
 
             // Плеер должен быть готов
             if (!player.duration || player.duration <= 0) return;
 
-            // Синхронизация времени
+            // Синхронизация времени (перемотка)
             const timeDiff = Math.abs(player.currentTime - currentTime);
             if (timeDiff > 1.5) {
                 ignoreNextUpdate = true;
                 player.currentTime = currentTime;
+                setTimeout(() => { ignoreNextUpdate = false; }, 400);
             }
 
             // Синхронизация play/pause
             if (isPlaying && !player.playing) {
                 ignoreNextUpdate = true;
                 player.play().catch(() => {});
+                setTimeout(() => { ignoreNextUpdate = false; }, 400);
             } else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
                 player.pause();
+                setTimeout(() => { ignoreNextUpdate = false; }, 400);
             }
 
             lastSyncTime = now;
@@ -974,21 +977,18 @@
                 if (!ignoreNextUpdate) {
                     updatePlayerState(true);
                 }
-                ignoreNextUpdate = false;
             });
 
             player.on('pause', () => {
                 if (!ignoreNextUpdate) {
                     updatePlayerState(false);
                 }
-                ignoreNextUpdate = false;
             });
 
             player.on('seeked', () => {
                 if (!ignoreNextUpdate) {
                     updatePlayerState(player.playing);
                 }
-                ignoreNextUpdate = false;
             });
 
             player.on('error', (error) => {
