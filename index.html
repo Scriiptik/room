@@ -4,225 +4,299 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WatchTogether — Смотрим видео вместе</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ===== Сброс и базовые стили ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #1f1f23;
+            --border: #27272a;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --accent-glow: rgba(139, 92, 246, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f0f;
-            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* ===== Контейнер главной страницы ===== */
+        /* Фоновый градиент */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .container {
-            text-align: center;
-            padding: 2rem;
-            max-width: 500px;
+            position: relative;
+            z-index: 1;
             width: 100%;
+            max-width: 420px;
         }
 
-        h1 {
-            font-size: 2.5rem;
+        /* ===== Логотип ===== */
+        .logo {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent), #3b82f6);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.25);
+        }
+
+        .logo h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.35rem;
+        }
+
+        /* ===== Карточка ===== */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        /* ===== Ник ===== */
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-bottom: 0.5rem;
-            color: #ffffff;
         }
 
-        .subtitle {
-            font-size: 1.1rem;
-            color: #aaaaaa;
-            margin-bottom: 2rem;
-        }
-
-        /* ===== Поле ввода ника ===== */
-        .nickname-section {
-            margin-bottom: 2rem;
-        }
-
-        .nickname-section label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            color: #cccccc;
-        }
-
-        .nickname-input {
+        .input {
             width: 100%;
             padding: 0.75rem 1rem;
-            font-size: 1rem;
-            border: 2px solid #333333;
-            border-radius: 8px;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--text);
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .nickname-input:focus {
-            border-color: #6c63ff;
+        .input::placeholder {
+            color: #52525b;
         }
 
-        /* ===== Кнопка создания комнаты ===== */
-        .create-btn {
+        .input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .nickname-field {
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== Кнопка создать ===== */
+        .btn-primary {
             width: 100%;
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffffff;
-            background: linear-gradient(135deg, #6c63ff, #4834d4);
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
             border: none;
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
         }
 
-        .create-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(139, 92, 246, 0.3);
         }
 
-        .create-btn:active {
+        .btn-primary:active {
             transform: translateY(0);
         }
 
-        /* ===== Секция входа в существующую комнату ===== */
-        .join-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #333333;
+        /* ===== Разделитель ===== */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
 
-        .join-section p {
-            margin-bottom: 1rem;
-            color: #aaaaaa;
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
         }
 
+        .divider span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* ===== Форма входа ===== */
         .join-form {
             display: flex;
             gap: 0.5rem;
         }
 
-        .join-input {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            border: 2px solid #333333;
-            border-radius: 8px;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            outline: none;
+        .join-form .input {
             text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            text-align: center;
         }
 
-        .join-input:focus {
-            border-color: #6c63ff;
-        }
-
-        .join-btn {
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: #333333;
-            border: none;
-            border-radius: 8px;
+        .btn-secondary {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text);
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background 0.2s, border-color 0.2s;
+            white-space: nowrap;
         }
 
-        .join-btn:hover {
-            background-color: #444444;
+        .btn-secondary:hover {
+            background: var(--border);
+            border-color: #3f3f46;
         }
 
         /* ===== Футер ===== */
-        footer {
-            position: fixed;
-            bottom: 1rem;
-            font-size: 0.85rem;
-            color: #666666;
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #3f3f46;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎬 WatchTogether</h1>
-        <p class="subtitle">Смотрите видео с друзьями синхронно</p>
-
-        <!-- Ввод ника -->
-        <div class="nickname-section">
-            <label for="nickname">Ваш ник:</label>
-            <input 
-                type="text" 
-                id="nickname" 
-                class="nickname-input" 
-                placeholder="Гость" 
-                maxlength="20"
-            >
+        <!-- Логотип -->
+        <div class="logo">
+            <div class="logo-icon">▶</div>
+            <h1>WatchTogether</h1>
+            <p>Смотрите видео с друзьями синхронно</p>
         </div>
 
-        <!-- Создание новой комнаты -->
-        <button id="createBtn" class="create-btn">Создать комнату</button>
+        <!-- Карточка -->
+        <div class="card">
+            <!-- Ник -->
+            <div class="nickname-field">
+                <div class="field-label">Ваш ник</div>
+                <input
+                    type="text"
+                    id="nickname"
+                    class="input"
+                    placeholder="Гость"
+                    maxlength="20"
+                    autocomplete="off"
+                >
+            </div>
 
-        <!-- Вход в существующую комнату -->
-        <div class="join-section">
-            <p>Или войдите в существующую комнату</p>
+            <!-- Создать комнату -->
+            <button id="createBtn" class="btn-primary">Создать комнату</button>
+
+            <!-- Разделитель -->
+            <div class="divider">
+                <span>или войти в существующую</span>
+            </div>
+
+            <!-- Войти -->
             <form id="joinForm" class="join-form">
-                <input 
-                    type="text" 
-                    id="roomId" 
-                    class="join-input" 
-                    placeholder="ID комнаты" 
+                <input
+                    type="text"
+                    id="roomId"
+                    class="input"
+                    placeholder="ABC123"
                     maxlength="6"
                     required
+                    autocomplete="off"
                 >
-                <button type="submit" class="join-btn">Войти</button>
+                <button type="submit" class="btn-secondary">Войти →</button>
             </form>
         </div>
+
+        <div class="footer">WatchTogether © 2026</div>
     </div>
 
-    <footer>WatchTogether &copy; 2026</footer>
-
     <script>
-        // ===== Элементы DOM =====
         const createBtn = document.getElementById('createBtn');
         const joinForm = document.getElementById('joinForm');
         const roomIdInput = document.getElementById('roomId');
         const nicknameInput = document.getElementById('nickname');
 
-        /**
-         * Генерирует случайный ID комнаты из 6 символов (буквы + цифры).
-         * @returns {string} ID комнаты
-         */
         function generateRoomId() {
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        /**
-         * Сохраняет ник в localStorage для использования на странице комнаты.
-         */
         function saveNickname() {
             const nickname = nicknameInput.value.trim() || 'Гость';
             localStorage.setItem('watchtogether_nickname', nickname);
         }
 
-        // ===== Обработчик создания комнаты =====
         createBtn.addEventListener('click', () => {
             saveNickname();
-            const roomId = generateRoomId();
-            // Редирект на страницу комнаты с новым ID
-            window.location.href = `room.html?id=${roomId}`;
+            window.location.href = `room.html?id=${generateRoomId()}`;
         });
 
-        // ===== Обработчик входа в существующую комнату =====
         joinForm.addEventListener('submit', (e) => {
             e.preventDefault();
             saveNickname();
@@ -234,11 +308,8 @@
             }
         });
 
-        // ===== Восстановление ника из localStorage =====
-        const savedNickname = localStorage.getItem('watchtogether_nickname');
-        if (savedNickname) {
-            nicknameInput.value = savedNickname;
-        }
+        const saved = localStorage.getItem('watchtogether_nickname');
+        if (saved) nicknameInput.value = saved;
     </script>
 </body>
 </html>
