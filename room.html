@@ -348,6 +348,50 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
+        /* Режим кинотеатра */
+        body.cinema-mode .header { display: none; }
+        body.cinema-mode .participants-panel { display: none; }
+        body.cinema-mode .chat-panel { 
+            max-height: 200px;
+            border-radius: 0;
+        }
+        body.cinema-mode .main {
+            padding: 0;
+            gap: 0;
+        }
+        body.cinema-mode .center-col {
+            display: flex;
+            flex-direction: column;
+        }
+        body.cinema-mode .player-wrapper {
+            border-radius: 0;
+            flex: 1;
+        }
+        body.cinema-mode .video-bar { display: none; }
+
+        /* Кнопка выхода из кинорежима */
+        .cinema-exit {
+            position: fixed; top: 1rem; right: 1rem;
+            width: 40px; height: 40px;
+            background: rgba(0,0,0,0.7); border: none; border-radius: 50%;
+            color: #fff; font-size: 1.5rem; cursor: pointer;
+            z-index: 500; display: none;
+            align-items: center; justify-content: center;
+        }
+        body.cinema-mode .cinema-exit { display: flex; }
+
+        /* Адаптация при открытии клавиатуры */
+        body.keyboard-open .main {
+            max-height: calc(100vh - var(--keyboard-height, 200px));
+        }
+        body.keyboard-open .chat-panel {
+            max-height: calc(30vh - var(--keyboard-height, 200px) / 2);
+        }
+        body.keyboard-open .chat-body {
+            flex: 1;
+            min-height: 0;
+        }
+
         /* Адаптивность */
         @media (max-width: 900px) {
             .main { flex-wrap: wrap; }
@@ -413,6 +457,9 @@
     <!-- Тост -->
     <div id="errorToast" class="toast"></div>
 
+    <!-- Кнопка выхода из кинорежима -->
+    <button id="cinemaExit" class="cinema-exit" title="Выйти из режима кинотеатра">×</button>
+
     <!-- Модальная панель для выбора сервиса -->
     <div id="findModal" class="modal-overlay">
         <div class="modal-panel">
@@ -432,6 +479,14 @@
                 <div class="service-info">
                     <div class="service-name">YouTube</div>
                     <div class="service-desc">Открыть YouTube</div>
+                </div>
+            </button>
+            
+            <button id="openHelp" class="service-btn">
+                <div class="service-icon" style="background: #22c55e;">📖</div>
+                <div class="service-info">
+                    <div class="service-name">Справка</div>
+                    <div class="service-desc">Как добавить видео</div>
                 </div>
             </button>
         </div>
@@ -604,6 +659,8 @@
         const modalClose = document.getElementById('modalClose');
         const openVK = document.getElementById('openVK');
         const openYouTube = document.getElementById('openYouTube');
+        const openHelp = document.getElementById('openHelp');
+        const cinemaExit = document.getElementById('cinemaExit');
 
         // ============================================================
         // ===== ИНИЦИАЛИЗАЦИЯ =====
@@ -629,6 +686,46 @@
                 showToast('ID скопирован!');
             });
         });
+
+        // Выход из кинорежима
+        cinemaExit.addEventListener('click', () => {
+            document.body.classList.remove('cinema-mode');
+        });
+
+        // Двойной тап на видео для кинорежима
+        let lastTap = 0;
+        document.querySelector('.player-wrapper').addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                // Двойной тап - переключаем кинорежим
+                document.body.classList.toggle('cinema-mode');
+                e.preventDefault();
+            }
+            lastTap = now;
+        });
+
+        // Двойной клик для ПК
+        document.querySelector('.player-wrapper').addEventListener('dblclick', (e) => {
+            document.body.classList.toggle('cinema-mode');
+        });
+
+        // Адаптация при открытии клавиатуры (мобильные устройства)
+        if ('visualViewport' in window) {
+            const visualViewport = window.visualViewport;
+            
+            visualViewport.addEventListener('resize', () => {
+                const heightDiff = window.innerHeight - visualViewport.height;
+                
+                if (heightDiff > 150) {
+                    // Клавиатура открыта - адаптируем интерфейс
+                    document.body.classList.add('keyboard-open');
+                    document.documentElement.style.setProperty('--keyboard-height', `${heightDiff}px`);
+                } else {
+                    // Клавиатура закрыта
+                    document.body.classList.remove('keyboard-open');
+                }
+            });
+        }
 
         // Обработка кнопки "Найти что-то"
         findBtn.addEventListener('click', () => {
@@ -673,6 +770,107 @@
             }
             findModal.classList.remove('show');
         });
+
+        // Открыть справку
+        openHelp.addEventListener('click', () => {
+            findModal.classList.remove('show');
+            showHelpModal();
+        });
+
+        // Показать справку
+        function showHelpModal() {
+            const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+            
+            const helpHTML = `
+                <div id="helpOverlay" style="
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+                    z-index: 2000; display: flex; align-items: center; justify-content: center;
+                    padding: 1rem;
+                ">
+                    <div style="
+                        background: var(--surface); border: 1px solid var(--border);
+                        border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 500px;
+                        max-height: 80vh; overflow-y: auto; position: relative;
+                    ">
+                        <button id="helpClose" style="
+                            position: absolute; top: 0.75rem; right: 0.75rem;
+                            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+                            background: var(--surface-2); border: none; border-radius: 6px;
+                            color: var(--text-muted); cursor: pointer; font-size: 1.2rem;
+                        ">×</button>
+                        
+                        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📖 Как добавить видео</h2>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent);">📹 VK Видео</h3>
+                            ${isMobile ? `
+                                <div style="background: var(--surface-2); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                                    <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.5rem;"><b>На телефоне:</b></p>
+                                    <ol style="font-size: 0.85rem; line-height: 1.8; padding-left: 1.25rem;">
+                                        <li>Откройте <b>VK</b> в браузере (не в приложении)</li>
+                                        <li>Найдите нужное видео</li>
+                                        <li>Нажмите <b>⋯</b> (три точки) под видео</li>
+                                        <li>Выберите <b>"Скопировать ссылку"</b></li>
+                                        <li>Вставьте ссылку в поле ввода на нашем сайте</li>
+                                        <li>Нажмите <b>"Загрузить"</b></li>
+                                    </ol>
+                                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">💡 <b>Совет:</b> Если открылось приложение VK, переключитесь на браузерную версию (нажмите "Открыть в браузере")</p>
+                                </div>
+                            ` : `
+                                <div style="background: var(--surface-2); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                                    <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.5rem;"><b>На компьютере:</b></p>
+                                    <ol style="font-size: 0.85rem; line-height: 1.8; padding-left: 1.25rem;">
+                                        <li>Откройте <b>vk.com</b> и найдите видео</li>
+                                        <li>Нажмите <b>⋯</b> (три точки) под видео</li>
+                                        <li>Выберите <b>"Скопировать ссылку для встраивания"</b></li>
+                                        <li>Вставьте код в поле ввода на нашем сайте</li>
+                                        <li>Нажмите <b>"Загрузить"</b></li>
+                                    </ol>
+                                </div>
+                            `}
+                            <p style="font-size: 0.75rem; color: var(--text-dim);">Поддерживаемые форматы: <code style="background: var(--bg); padding: 0.15rem 0.35rem; border-radius: 4px;">vk.com/video-XXX_YYY</code></p>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #ef4444;">▶️ YouTube</h3>
+                            <div style="background: var(--surface-2); padding: 1rem; border-radius: 8px;">
+                                <ol style="font-size: 0.85rem; line-height: 1.8; padding-left: 1.25rem;">
+                                    <li>Откройте <b>YouTube</b></li>
+                                    <li>Скопируйте ссылку на видео из адресной строки</li>
+                                    <li>Вставьте ссылку в поле ввода</li>
+                                    <li>Нажмите <b>"Загрузить"</b></li>
+                                </ol>
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">Поддерживаемые форматы: <code style="background: var(--bg); padding: 0.15rem 0.35rem; border-radius: 4px;">youtube.com/watch?v=XXX</code>, <code style="background: var(--bg); padding: 0.15rem 0.35rem; border-radius: 4px;">youtu.be/XXX</code></p>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #22c55e;">🎬 Прямая ссылка на MP4</h3>
+                            <div style="background: var(--surface-2); padding: 1rem; border-radius: 8px;">
+                                <p style="font-size: 0.85rem; line-height: 1.6;">Просто вставьте прямую ссылку на <b>.mp4</b> файл и нажмите "Загрузить"</p>
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--accent-glow); padding: 0.75rem; border-radius: 8px; border-left: 3px solid var(--accent);">
+                            <p style="font-size: 0.8rem; line-height: 1.5;"><b>💡 Двойной тап</b> по видео включает <b>режим кинотеатра</b> (остаётся только видео и чат)</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', helpHTML);
+            
+            document.getElementById('helpClose').addEventListener('click', () => {
+                document.getElementById('helpOverlay').remove();
+            });
+            
+            document.getElementById('helpOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'helpOverlay') {
+                    document.getElementById('helpOverlay').remove();
+                }
+            });
+        }
 
         // Конвертировать URL в VK desktop версию
         function convertToVKDesktopUrl(url) {
@@ -1317,8 +1515,9 @@
                     const time = msg.timestamp
                         ? new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
                         : '';
+                    const userColor = generateUserColor(msg.user);
                     div.innerHTML = `
-                        <span class="u">${escapeHtml(msg.user)}</span>
+                        <span class="u" style="color: ${userColor}">${escapeHtml(msg.user)}</span>
                         <span class="t">${escapeHtml(msg.text)}</span>
                         <span class="time">${time}</span>
                     `;
@@ -1461,9 +1660,10 @@
             onlineParticipants.forEach(([uid, pdata]) => {
                 const div = document.createElement('div');
                 div.className = 'member';
+                const userColor = generateUserColor(pdata.nickname);
                 div.innerHTML = `
                     <div class="member-dot"></div>
-                    <span>${escapeHtml(pdata.nickname)}${uid === userId ? ' (Вы)' : ''}</span>
+                    <span style="color: ${userColor}">${escapeHtml(pdata.nickname)}${uid === userId ? ' (Вы)' : ''}</span>
                 `;
                 participantsList.appendChild(div);
             });
@@ -1480,6 +1680,24 @@
         // ============================================================
         // ===== УТИЛИТЫ =====
         // ============================================================
+
+        /**
+         * Генерирует уникальный цвет из ника участника.
+         */
+        function generateUserColor(nickname) {
+            // Простой hash из строки
+            let hash = 0;
+            for (let i = 0; i < nickname.length; i++) {
+                hash = nickname.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            // Генерируем HSL цвет с хорошей насыщенностью и яркостью
+            const h = Math.abs(hash) % 360;
+            const s = 65 + (Math.abs(hash) % 20); // 65-85%
+            const l = 55 + (Math.abs(hash) % 15); // 55-70%
+            
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        }
 
         /**
          * Экранирует HTML-символы для безопасности.
