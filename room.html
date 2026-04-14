@@ -419,19 +419,19 @@
             <button id="modalClose" class="modal-close" title="Закрыть">×</button>
             <div class="modal-title">🔍 Найти видео</div>
             
-            <button id="openVK" class="service-btn" disabled>
+            <button id="openVK" class="service-btn">
                 <div class="service-icon vk">📹</div>
                 <div class="service-info">
                     <div class="service-name">VK Видео</div>
-                    <div class="service-desc">Открыть в VK (ПК версия)</div>
+                    <div class="service-desc">Открыть VK (ПК версия)</div>
                 </div>
             </button>
             
-            <button id="openYouTube" class="service-btn" disabled>
+            <button id="openYouTube" class="service-btn">
                 <div class="service-icon youtube">▶️</div>
                 <div class="service-info">
                     <div class="service-name">YouTube</div>
-                    <div class="service-desc">Открыть в YouTube</div>
+                    <div class="service-desc">Открыть YouTube</div>
                 </div>
             </button>
         </div>
@@ -633,7 +633,6 @@
         // Обработка кнопки "Найти что-то"
         findBtn.addEventListener('click', () => {
             findModal.classList.add('show');
-            updateServiceButtons();
         });
 
         // Закрытие модальной панели
@@ -649,46 +648,45 @@
 
         // Открыть VK видео
         openVK.addEventListener('click', () => {
-            if (lastLoadedVideoUrl) {
+            if (lastLoadedVideoUrl && detectVideoType(lastLoadedVideoUrl) === 'vk') {
+                // Если VK видео загружено - открываем его
                 const vkUrl = convertToVKDesktopUrl(lastLoadedVideoUrl);
-                window.open(vkUrl, '_blank');
-                findModal.classList.remove('show');
+                window.open(vkUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                // Иначе открываем раздел видео в VK
+                window.open('https://vk.com/videos', '_blank', 'noopener,noreferrer');
             }
+            findModal.classList.remove('show');
         });
 
         // Открыть YouTube видео
         openYouTube.addEventListener('click', () => {
-            if (lastLoadedVideoUrl) {
+            if (lastLoadedVideoUrl && (detectVideoType(lastLoadedVideoUrl) === 'youtube' || detectVideoType(lastLoadedVideoUrl) === 'mp4')) {
+                // Если YouTube видео загружено - открываем его
                 const ytUrl = convertToYouTubeUrl(lastLoadedVideoUrl);
-                window.open(ytUrl, '_blank');
-                findModal.classList.remove('show');
+                window.open(ytUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                // Иначе открываем главную YouTube
+                window.open('https://www.youtube.com', '_blank', 'noopener,noreferrer');
             }
+            findModal.classList.remove('show');
         });
-
-        // Обновить состояние кнопок
-        function updateServiceButtons() {
-            const hasVideo = !!lastLoadedVideoUrl;
-            const videoType = hasVideo ? detectVideoType(lastLoadedVideoUrl) : null;
-            
-            openVK.disabled = !hasVideo || videoType !== 'vk';
-            openYouTube.disabled = !hasVideo || (videoType !== 'youtube' && videoType !== 'mp4');
-        }
 
         // Конвертировать URL в VK desktop версию
         function convertToVKDesktopUrl(url) {
-            // Если это уже video_ext.php, конвертируем в обычную VK ссылку
+            // Если это уже video_ext.php, возвращаем как есть (это работает везде)
             if (url.includes('video_ext.php')) {
-                const params = new URLSearchParams(url.split('?')[1]);
-                const oid = params.get('oid');
-                const id = params.get('id');
-                const hash = params.get('hash');
-                
-                let vkUrl = `https://vk.com/video-${Math.abs(parseInt(oid))}_${id}`;
-                if (hash) {
-                    vkUrl += `?access_key=${hash}`;
-                }
-                return vkUrl;
+                return url;
             }
+            
+            // Если это VK ссылка с video-OWNER_ID, конвертируем в video_ext.php
+            const vkIdMatch = url.match(/vk\.com\/.*video-?(\d+)_(\d+)/);
+            if (vkIdMatch) {
+                const ownerId = vkIdMatch[1];
+                const videoId = vkIdMatch[2];
+                return `https://vk.com/video_ext.php?oid=-${ownerId}&id=${videoId}&hd=2`;
+            }
+            
             // Если это уже VK ссылка, возвращаем как есть
             return url;
         }
@@ -1119,9 +1117,6 @@
                 }
 
                 console.log('Видео загружено:', url, 'тип:', type, fromSync ? '(синхронизация)' : '');
-                
-                // Обновляем состояние кнопок "Найти что-то"
-                updateServiceButtons();
 
             } catch (error) {
                 console.error('Ошибка загрузки видео:', error);
