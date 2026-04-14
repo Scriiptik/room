@@ -60,6 +60,63 @@
         }
         .btn-icon:hover { background: var(--surface-2); color: var(--text); }
 
+        /* Кнопка "Найти что-то" */
+        .btn-find {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 0.85rem; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-find:hover { border-color: var(--accent); color: var(--text); background: var(--surface-2); }
+
+        /* Модальная панель */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal-panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem; width: 90%; max-width: 400px;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            background: var(--surface-2); border: none; border-radius: 6px;
+            color: var(--text-muted); cursor: pointer; font-size: 1.2rem;
+        }
+        .modal-close:hover { background: var(--border); color: var(--text); }
+
+        .modal-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);
+        }
+
+        .service-btn {
+            width: 100%; padding: 1rem; margin-bottom: 0.75rem;
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+            font-family: inherit; color: var(--text);
+        }
+        .service-btn:hover { border-color: var(--accent); background: var(--surface); }
+        .service-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .service-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+        .service-icon.vk { background: #0077FF; }
+        .service-icon.youtube { background: #FF0000; }
+
+        .service-info { flex: 1; text-align: left; }
+        .service-name { font-weight: 600; font-size: 0.95rem; }
+        .service-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+
         .room-badge {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.4rem 0.75rem; background: var(--surface);
@@ -313,6 +370,7 @@
                 <span class="dot"></span>
                 <span id="roomIdText"></span>
             </div>
+            <button id="findBtn" class="btn-find" title="Найти видео">🔍 Найти что-то</button>
         </div>
         <div class="user-badge">
             <div class="user-avatar" id="userAvatar"></div>
@@ -331,7 +389,7 @@
         <!-- Центральная колонка: ввод + видео -->
         <div class="center-col">
             <form id="videoForm" class="video-bar">
-                <input type="text" id="videoUrlInput" class="input" placeholder="YouTube, Vimeo или прямая ссылка на .mp4" required autocomplete="off">
+                <input type="text" id="videoUrlInput" class="input" placeholder="YouTube, Vimeo, VK или iframe код для встраивания" required autocomplete="off">
                 <button type="submit" id="loadBtn" class="btn-accent">▶ Загрузить</button>
             </form>
 
@@ -354,6 +412,30 @@
 
     <!-- Тост -->
     <div id="errorToast" class="toast"></div>
+
+    <!-- Модальная панель для выбора сервиса -->
+    <div id="findModal" class="modal-overlay">
+        <div class="modal-panel">
+            <button id="modalClose" class="modal-close" title="Закрыть">×</button>
+            <div class="modal-title">🔍 Найти видео</div>
+            
+            <button id="openVK" class="service-btn" disabled>
+                <div class="service-icon vk">📹</div>
+                <div class="service-info">
+                    <div class="service-name">VK Видео</div>
+                    <div class="service-desc">Открыть в VK (ПК версия)</div>
+                </div>
+            </button>
+            
+            <button id="openYouTube" class="service-btn" disabled>
+                <div class="service-icon youtube">▶️</div>
+                <div class="service-info">
+                    <div class="service-name">YouTube</div>
+                    <div class="service-desc">Открыть в YouTube</div>
+                </div>
+            </button>
+        </div>
+    </div>
 
     <!-- Plyr JS -->
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
@@ -443,42 +525,59 @@
         let lastLocalUpdate = 0;
 
         // Web Audio API для звуков
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
+        let audioCtxInitialized = false;
+
+        function ensureAudioCtx() {
+            if (!audioCtxInitialized) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioCtxInitialized = true;
+                } catch (e) {
+                    console.warn('Web Audio API не доступен:', e);
+                }
+            }
+            return audioCtx;
+        }
 
         function playSendSound() {
+            const ctx = ensureAudioCtx();
+            if (!ctx) return;
+            
             try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(ctx.destination);
                 osc.frequency.value = 800;
                 osc.type = 'sine';
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
                 osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } catch (e) {}
+                osc.stop(ctx.currentTime + 0.08);
+            } catch (e) {
+                console.warn('Ошибка воспроизления звука отправки:', e);
+            }
         }
 
         function playReceiveSound() {
+            const ctx = ensureAudioCtx();
+            if (!ctx) return;
+            
             try {
-                const osc1 = audioCtx.createOscillator();
-                const osc2 = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc1.connect(gain);
-                osc2.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc1.frequency.value = 587.33;
-                osc2.frequency.value = 880;
-                osc1.type = 'sine';
-                osc2.type = 'sine';
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-                osc1.start();
-                osc2.start();
-                osc1.stop(audioCtx.currentTime + 0.25);
-                osc2.stop(audioCtx.currentTime + 0.25);
-            } catch (e) {}
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 700;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.warn('Ошибка воспроизления звука получения:', e);
+            }
         }
 
         // ============================================================
@@ -498,6 +597,13 @@
         const chatMessages = document.getElementById('chatMessages');
         const participantsList = document.getElementById('participantsList');
         const errorToast = document.getElementById('errorToast');
+        
+        // Элементы модальной панели
+        const findBtn = document.getElementById('findBtn');
+        const findModal = document.getElementById('findModal');
+        const modalClose = document.getElementById('modalClose');
+        const openVK = document.getElementById('openVK');
+        const openYouTube = document.getElementById('openYouTube');
 
         // ============================================================
         // ===== ИНИЦИАЛИЗАЦИЯ =====
@@ -523,6 +629,78 @@
                 showToast('ID скопирован!');
             });
         });
+
+        // Обработка кнопки "Найти что-то"
+        findBtn.addEventListener('click', () => {
+            findModal.classList.add('show');
+            updateServiceButtons();
+        });
+
+        // Закрытие модальной панели
+        modalClose.addEventListener('click', () => {
+            findModal.classList.remove('show');
+        });
+
+        findModal.addEventListener('click', (e) => {
+            if (e.target === findModal) {
+                findModal.classList.remove('show');
+            }
+        });
+
+        // Открыть VK видео
+        openVK.addEventListener('click', () => {
+            if (lastLoadedVideoUrl) {
+                const vkUrl = convertToVKDesktopUrl(lastLoadedVideoUrl);
+                window.open(vkUrl, '_blank');
+                findModal.classList.remove('show');
+            }
+        });
+
+        // Открыть YouTube видео
+        openYouTube.addEventListener('click', () => {
+            if (lastLoadedVideoUrl) {
+                const ytUrl = convertToYouTubeUrl(lastLoadedVideoUrl);
+                window.open(ytUrl, '_blank');
+                findModal.classList.remove('show');
+            }
+        });
+
+        // Обновить состояние кнопок
+        function updateServiceButtons() {
+            const hasVideo = !!lastLoadedVideoUrl;
+            const videoType = hasVideo ? detectVideoType(lastLoadedVideoUrl) : null;
+            
+            openVK.disabled = !hasVideo || videoType !== 'vk';
+            openYouTube.disabled = !hasVideo || (videoType !== 'youtube' && videoType !== 'mp4');
+        }
+
+        // Конвертировать URL в VK desktop версию
+        function convertToVKDesktopUrl(url) {
+            // Если это уже video_ext.php, конвертируем в обычную VK ссылку
+            if (url.includes('video_ext.php')) {
+                const params = new URLSearchParams(url.split('?')[1]);
+                const oid = params.get('oid');
+                const id = params.get('id');
+                const hash = params.get('hash');
+                
+                let vkUrl = `https://vk.com/video-${Math.abs(parseInt(oid))}_${id}`;
+                if (hash) {
+                    vkUrl += `?access_key=${hash}`;
+                }
+                return vkUrl;
+            }
+            // Если это уже VK ссылка, возвращаем как есть
+            return url;
+        }
+
+        // Конвертировать URL в YouTube
+        function convertToYouTubeUrl(url) {
+            const videoId = extractYouTubeId(url);
+            if (videoId) {
+                return `https://www.youtube.com/watch?v=${videoId}`;
+            }
+            return url;
+        }
 
         // ============================================================
         // ===== ИНИЦИАЛИЗАЦИЯ КОМНАТЫ =====
@@ -714,21 +892,27 @@
         /**
          * Определяет тип видео по URL.
          * @param {string} url - Ссылка на видео
-         * @returns {string} 'youtube', 'vimeo', 'mp4' или null
+         * @returns {string} 'youtube', 'vimeo', 'vk', 'mp4' или null
          */
         function detectVideoType(url) {
             if (!url) return null;
-            
+
             // YouTube
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
                 return 'youtube';
             }
-            
+
             // Vimeo
             if (url.includes('vimeo.com')) {
                 return 'vimeo';
             }
-            
+
+            // VK (поддерживаем vk.com, vkvideo.ru, video_ext.php)
+            if (url.includes('vk.com') || url.includes('vkvideo.ru') || 
+                url.includes('video_ext.php')) {
+                return 'vk';
+            }
+
             // Прямая ссылка на MP4
             if (url.includes('.mp4') || url.includes('.m4v')) {
                 return 'mp4';
@@ -756,6 +940,12 @@
 
                 const videoEl = document.getElementById('player');
                 const embedEl = document.getElementById('playerEmbed');
+
+                // Проверяем что DOM элементы существуют
+                if (!videoEl || !embedEl) {
+                    showError('Ошибка: элементы плеера не найдены.');
+                    return;
+                }
 
                 // Уничтожаем старый Plyr
                 if (player) {
@@ -847,6 +1037,36 @@
                     setupPlayerHandlers();
                     blockSyncUntil = Date.now() + 3000;
 
+                } else if (type === 'vk') {
+                    const embedUrl = convertVKToEmbedUrl(url);
+                    if (!embedUrl) {
+                        showError('Неверная ссылка на VK видео.');
+                        return;
+                    }
+
+                    // Показываем embed контейнер
+                    embedEl.style.display = 'block';
+
+                    // Создаём iframe для VK видео
+                    const iframe = document.createElement('iframe');
+                    iframe.src = embedUrl;
+                    iframe.setAttribute('frameborder', '0');
+                    iframe.setAttribute('allowfullscreen', 'true');
+                    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    embedEl.appendChild(iframe);
+
+                    // Для VK не используем Plyr, а просто показываем iframe
+                    // Создаём простой интерфейс управления
+                    setupVKPlayerHandlers(iframe);
+                    blockSyncUntil = Date.now() + 3000;
+
+                    // Автоматически начинаем воспроизведение (насколько возможно с iframe)
+                    setTimeout(() => {
+                        console.log('VK видео загружено, пытаемся запустить...');
+                    }, 1000);
+
                 } else if (type === 'mp4') {
                     // Показываем video элемент
                     videoEl.style.display = 'block';
@@ -869,6 +1089,16 @@
                     };
 
                     setupPlayerHandlers();
+
+                    // Автоматически запускаем видео
+                    player.on('canplay', () => {
+                        const playPromise = player.play();
+                        if (playPromise && typeof playPromise.catch === 'function') {
+                            playPromise.catch(() => {
+                                console.log('Автозапуск заблокирован браузером');
+                            });
+                        }
+                    });
                 }
 
                 // Обновляем Firestore только если это не загрузка из подписки
@@ -889,6 +1119,9 @@
                 }
 
                 console.log('Видео загружено:', url, 'тип:', type, fromSync ? '(синхронизация)' : '');
+                
+                // Обновляем состояние кнопок "Найти что-то"
+                updateServiceButtons();
 
             } catch (error) {
                 console.error('Ошибка загрузки видео:', error);
@@ -940,6 +1173,16 @@
         }
 
         /**
+         * Обработчики для VK iframe (ограниченная поддержка).
+         * VK iframe не предоставляет API для синхронизации, поэтому только базовая поддержка.
+         */
+        function setupVKPlayerHandlers(iframe) {
+            console.log('VK видео загружено в iframe');
+            // VK iframe не даёт API для управления, поэтому просто логируем
+            // Синхронизация невозможна с iframe VK, пользователь управляет самостоятельно
+        }
+
+        /**
          * Извлекает ID видео из YouTube URL.
          */
         function extractYouTubeId(url) {
@@ -955,6 +1198,64 @@
             const regExp = /vimeo.com\/(\d+)/;
             const match = url.match(regExp);
             return match ? match[1] : null;
+        }
+
+        /**
+         * Извлекает ID видео из VK URL.
+         */
+        function extractVKId(url) {
+            // Поддерживаем форматы:
+            // vk.com/video-OWNER_ID_VIDEO_ID
+            // vk.com/video?z=video-OWNER_ID_VIDEO_ID
+            // vk.com/clip-OWNER_ID_CLIP_ID
+            // vkvideo.ru/video_ext.php?oid=...&id=...&hash=...
+            // Прямые ссылки video_ext.php
+            
+            // Для video_ext.php извлекаем параметры напрямую
+            if (url.includes('video_ext.php')) {
+                const params = new URLSearchParams(url.split('?')[1]);
+                return {
+                    ownerId: params.get('oid'),
+                    videoId: params.get('id'),
+                    hash: params.get('hash')
+                };
+            }
+            
+            const patterns = [
+                /vk\.com\/.*video-?(\d+)_(\d+)/,
+                /vk\.com\/.*\?z=video-?(\d+)_(\d+)/,
+                /vk\.com\/.*clip-?(\d+)_(\d+)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return {
+                        ownerId: match[1],
+                        videoId: match[2],
+                        hash: null
+                    };
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Конвертирует VK ссылку в формат iframe для встраивания.
+         */
+        function convertVKToEmbedUrl(url) {
+            const vkData = extractVKId(url);
+            if (!vkData || !vkData.ownerId || !vkData.videoId) return null;
+            
+            // Формируем URL для встраивания VK видео с автозапуском
+            let embedUrl = `https://vk.com/video_ext.php?oid=${vkData.ownerId}&id=${vkData.videoId}&hd=2&autoplay=1`;
+            
+            // Добавляем hash если есть
+            if (vkData.hash) {
+                embedUrl += `&hash=${vkData.hash}`;
+            }
+            
+            return embedUrl;
         }
 
         // ============================================================
@@ -973,6 +1274,24 @@
                 });
                 videoUrlInput.value = '';
             }
+        });
+
+        // Автоматическая загрузка при вставке iframe кода или ссылки
+        videoUrlInput.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                const text = videoUrlInput.value.trim();
+                if (text) {
+                    // Если это iframe код - извлекаем URL
+                    let url = text;
+                    if (text.includes('<iframe')) {
+                        const match = text.match(/src=["']([^"']+)["']/);
+                        if (match) {
+                            url = match[1];
+                            videoUrlInput.value = url;
+                        }
+                    }
+                }
+            }, 100);
         });
 
         // ============================================================
