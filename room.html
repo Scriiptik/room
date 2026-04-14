@@ -546,9 +546,6 @@
         // Последний загруженный URL видео (для предотвращения повторной загрузки)
         let lastLoadedVideoUrl = '';
 
-        // Дебаунс для updatePlayerState
-        let pendingUpdate = null;
-
         // Время, до которого игнорируем синхронизацию (после загрузки видео)
         let blockSyncUntil = 0;
 
@@ -686,22 +683,17 @@
         async function updatePlayerState(isPlaying) {
             if (!player) return;
             if (typeof player.duration !== 'number') return;
-
-            if (pendingUpdate) clearTimeout(pendingUpdate);
-            pendingUpdate = setTimeout(async () => {
-                try {
-                    await updateDoc(roomRef, {
-                        playerState: {
-                            isPlaying: isPlaying,
-                            currentTime: player.currentTime || 0,
-                            timestamp: Date.now()
-                        }
-                    });
-                } catch (error) {
-                    console.error('Ошибка обновления состояния:', error);
-                }
-                pendingUpdate = null;
-            }, 500);
+            try {
+                await updateDoc(roomRef, {
+                    playerState: {
+                        isPlaying: isPlaying,
+                        currentTime: player.currentTime || 0,
+                        timestamp: Date.now()
+                    }
+                });
+            } catch (error) {
+                console.error('Ошибка обновления состояния:', error);
+            }
         }
 
         // ============================================================
@@ -760,7 +752,6 @@
             if (timeDiff > 2.0) {
                 ignoreNextUpdate = true;
                 player.currentTime = currentTime;
-                setTimeout(() => { ignoreNextUpdate = false; }, 500);
             }
 
             // Play
@@ -770,13 +761,11 @@
                 if (playPromise && typeof playPromise.catch === 'function') {
                     playPromise.catch(() => {});
                 }
-                setTimeout(() => { ignoreNextUpdate = false; }, 500);
             }
             // Pause
             else if (!isPlaying && player.playing) {
                 ignoreNextUpdate = true;
                 player.pause();
-                setTimeout(() => { ignoreNextUpdate = false; }, 500);
             }
 
             lastSyncTime = now;
@@ -982,23 +971,18 @@
             if (!player) return;
 
             player.on('play', () => {
-                if (!ignoreNextUpdate) {
-                    // Не отправлять если время = 0 (возможно автозапуск при загрузке)
-                    if (player.currentTime === 0) return;
-                    updatePlayerState(true);
-                }
+                if (ignoreNextUpdate) { ignoreNextUpdate = false; return; }
+                updatePlayerState(true);
             });
 
             player.on('pause', () => {
-                if (!ignoreNextUpdate) {
-                    updatePlayerState(false);
-                }
+                if (ignoreNextUpdate) { ignoreNextUpdate = false; return; }
+                updatePlayerState(false);
             });
 
             player.on('seeked', () => {
-                if (!ignoreNextUpdate) {
-                    updatePlayerState(player.playing);
-                }
+                if (ignoreNextUpdate) { ignoreNextUpdate = false; return; }
+                updatePlayerState(player.playing);
             });
 
             player.on('error', (error) => {
