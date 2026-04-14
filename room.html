@@ -649,12 +649,14 @@
         // Открыть VK видео
         openVK.addEventListener('click', () => {
             if (lastLoadedVideoUrl && detectVideoType(lastLoadedVideoUrl) === 'vk') {
-                // Если VK видео загружено - открываем его
+                // Если VK видео загружено - открываем его через промежуточную страницу
                 const vkUrl = convertToVKDesktopUrl(lastLoadedVideoUrl);
-                window.open(vkUrl, '_blank', 'noopener,noreferrer');
+                const proxyUrl = `open-vk.html?url=${encodeURIComponent(vkUrl)}`;
+                window.open(proxyUrl, '_blank', 'noopener,noreferrer');
             } else {
-                // Иначе открываем раздел видео в VK
-                window.open('https://vk.com/videos', '_blank', 'noopener,noreferrer');
+                // Иначе открываем раздел видео в VK (браузерная версия)
+                const proxyUrl = `open-vk.html?url=${encodeURIComponent('https://vk.com/video')}`;
+                window.open(proxyUrl, '_blank', 'noopener,noreferrer');
             }
             findModal.classList.remove('show');
         });
