@@ -549,6 +549,9 @@
         // Время, до которого игнорируем синхронизацию (после загрузки видео)
         let blockSyncUntil = 0;
 
+        // Время последней локальной записи в Firestore (чтобы не реагировать на свои записи)
+        let lastLocalUpdate = 0;
+
         // ============================================================
         // ===== ЭЛЕМЕНТЫ DOM =====
         // ============================================================
@@ -691,6 +694,7 @@
                         timestamp: Date.now()
                     }
                 });
+                lastLocalUpdate = Date.now();
             } catch (error) {
                 console.error('Ошибка обновления состояния:', error);
             }
@@ -742,6 +746,9 @@
 
             const { isPlaying, currentTime, timestamp } = playerState;
             const now = Date.now();
+
+            // Не реагируем на свои свежие записи (< 2 сек назад)
+            if (now - lastLocalUpdate < 2000) return;
 
             if (now - timestamp > 8000) return;
             if (now - lastSyncTime < 1500) return;
