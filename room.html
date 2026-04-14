@@ -50,95 +50,92 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
+        .header-left { display: flex; align-items: center; gap: 0.75rem; }
         .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            color: var(--text-muted); cursor: pointer; font-size: 1.1rem;
             transition: background 0.2s, color 0.2s;
         }
-
-        .btn-icon:hover {
-            background: var(--surface-2);
-            color: var(--text);
-        }
+        .btn-icon:hover { background: var(--surface-2); color: var(--text); }
 
         .room-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.75rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            cursor: pointer;
-            transition: border-color 0.2s;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 0.75rem; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+            cursor: pointer; transition: border-color 0.2s;
         }
+        .room-badge:hover { border-color: var(--accent); }
+        .room-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
 
-        .room-badge:hover {
-            border-color: var(--accent);
-        }
-
-        .room-badge .dot {
-            width: 6px;
-            height: 6px;
-            background: var(--green);
-            border-radius: 50%;
-        }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
+        .user-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
         .user-avatar {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, var(--accent), #3b82f6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #fff;
+            width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), #3b82f6);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700; color: #fff;
         }
 
         /* ===== Основной контейнер ===== */
         .main {
-            max-width: 1200px;
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 1rem 1.25rem 2rem;
+            width: 100%;
+        }
+
+        /* ===== Левая панель — участники ===== */
+        .participants-panel {
+            width: 200px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 120px);
+            position: sticky;
+            top: 80px;
+            align-self: flex-start;
+        }
+        .panel-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+        .member {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 0.6rem; border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .member:hover { background: var(--surface-2); }
+        .member-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+
+        /* ===== Центральная колонка — видео и ввод ===== */
+        .center-col {
+            flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
 
-        /* ===== Поле ввода видео ===== */
         .video-bar {
             display: flex;
             gap: 0.5rem;
         }
-
         .video-bar .input {
             flex: 1;
             padding: 0.7rem 1rem;
@@ -151,9 +148,7 @@
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-
         .video-bar .input::placeholder { color: var(--text-dim); }
-
         .video-bar .input:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
@@ -172,16 +167,11 @@
             transition: transform 0.15s, box-shadow 0.2s;
             white-space: nowrap;
         }
-
-        .btn-accent:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
-        }
-
+        .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3); }
         .btn-accent:active { transform: translateY(0); }
         .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* ===== Плеер ===== */
+        /* Плеер */
         .player-wrapper {
             width: 100%;
             background: #000;
@@ -189,40 +179,25 @@
             overflow: hidden;
             aspect-ratio: 16 / 9;
         }
-
-        .player-wrapper video {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .player-wrapper > div {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Plyr overrides */
+        .player-wrapper video { width: 100%; height: 100%; display: block; }
+        .player-wrapper > div { width: 100%; height: 100%; }
         .plyr { --plyr-color-main: var(--accent); height: 100%; }
         .plyr__video-wrapper { background: #000; }
 
-        /* ===== Нижняя секция ===== */
-        .bottom {
-            display: flex;
-            gap: 1rem;
-            min-height: 320px;
-        }
-
-        /* ===== Чат ===== */
-        .chat {
-            flex: 1;
-            min-width: 0;
+        /* ===== Правая панель — чат ===== */
+        .chat-panel {
+            width: 320px;
+            flex-shrink: 0;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             display: flex;
             flex-direction: column;
+            max-height: calc(100vh - 120px);
+            position: sticky;
+            top: 80px;
+            align-self: flex-start;
         }
-
         .chat-head {
             padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border);
@@ -231,8 +206,8 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-shrink: 0;
         }
-
         .chat-body {
             flex: 1;
             overflow-y: auto;
@@ -240,8 +215,8 @@
             display: flex;
             flex-direction: column;
             gap: 0.35rem;
+            min-height: 0;
         }
-
         .chat-body::-webkit-scrollbar { width: 4px; }
         .chat-body::-webkit-scrollbar-track { background: transparent; }
         .chat-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -253,12 +228,11 @@
             font-size: 0.85rem;
             line-height: 1.4;
             word-wrap: break-word;
+            flex-shrink: 0;
         }
-
         .msg .u { color: var(--accent); font-weight: 600; margin-right: 0.35rem; }
         .msg .t { color: var(--text-muted); }
         .msg .time { color: var(--text-dim); font-size: 0.7rem; margin-left: 0.4rem; }
-
         .msg.sys {
             background: transparent;
             color: var(--text-dim);
@@ -271,8 +245,8 @@
             gap: 0.4rem;
             padding: 0.6rem 0.75rem;
             border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
-
         .chat-foot .input {
             flex: 1;
             padding: 0.55rem 0.75rem;
@@ -285,83 +259,20 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
         .chat-foot .input::placeholder { color: var(--text-dim); }
         .chat-foot .input:focus { border-color: var(--accent); }
 
         .btn-send {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
             background: var(--accent);
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.2s;
+            border: none; border-radius: 8px;
+            color: #fff; cursor: pointer;
+            font-size: 1rem; transition: background 0.2s;
         }
-
         .btn-send:hover { background: var(--accent-hover); }
 
-        /* ===== Участники ===== */
-        .panel {
-            width: 220px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-head {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .panel-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .panel-body::-webkit-scrollbar { width: 4px; }
-        .panel-body::-webkit-scrollbar-track { background: transparent; }
-        .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        .member {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.45rem 0.6rem;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            transition: background 0.15s;
-        }
-
-        .member:hover { background: var(--surface-2); }
-
-        .member-dot {
-            width: 7px;
-            height: 7px;
-            background: var(--green);
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .member.you { color: var(--text-muted); }
-
-        /* ===== Тост ===== */
+        /* Тост */
         .toast {
             position: fixed;
             bottom: 1.25rem;
@@ -378,21 +289,18 @@
             z-index: 1000;
             pointer-events: none;
         }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
+        /* Адаптивность */
+        @media (max-width: 900px) {
+            .main { flex-wrap: wrap; }
+            .participants-panel { width: 100%; max-height: 150px; position: static; }
+            .chat-panel { width: 100%; max-height: 300px; position: static; }
         }
-
-        /* ===== Адаптивность ===== */
         @media (max-width: 768px) {
-            .main { padding: 0.75rem 0.75rem 1.5rem; }
-            .bottom { flex-direction: column; min-height: auto; }
-            .panel { width: 100%; max-height: 200px; }
-            .chat { min-height: 280px; }
+            .main { padding: 0.75rem; }
             .video-bar { flex-direction: column; }
-            .btn-accent { width: 100%; text-align: center; }
-            .user-badge span { display: none; }
+            .btn-accent { width: 100%; }
         }
     </style>
 </head>
@@ -414,51 +322,33 @@
 
     <!-- Основной контент -->
     <div class="main">
-        <!-- Поле ввода видео -->
-        <form id="videoForm" class="video-bar">
-            <input
-                type="text"
-                id="videoUrlInput"
-                class="input"
-                placeholder="YouTube, Vimeo или прямая ссылка на .mp4"
-                required
-                autocomplete="off"
-            >
-            <button type="submit" id="loadBtn" class="btn-accent">▶ Загрузить</button>
-        </form>
-
-        <!-- Плеер -->
-        <div class="player-wrapper">
-            <div id="playerEmbed" style="display:none;"></div>
-            <video id="player" playsinline controls>
-            </video>
+        <!-- Левая панель: участники -->
+        <div class="participants-panel">
+            <div class="panel-header">👥 Участники</div>
+            <div id="participantsList" class="panel-body"></div>
         </div>
 
-        <!-- Чат и участники -->
-        <div class="bottom">
-            <!-- Чат -->
-            <div class="chat">
-                <div class="chat-head">💬 Чат</div>
-                <div id="chatMessages" class="chat-body"></div>
-                <form id="chatForm" class="chat-foot">
-                    <input
-                        type="text"
-                        id="chatInput"
-                        class="input"
-                        placeholder="Написать сообщение..."
-                        maxlength="500"
-                        required
-                        autocomplete="off"
-                    >
-                    <button type="submit" class="btn-send">➤</button>
-                </form>
-            </div>
+        <!-- Центральная колонка: ввод + видео -->
+        <div class="center-col">
+            <form id="videoForm" class="video-bar">
+                <input type="text" id="videoUrlInput" class="input" placeholder="YouTube, Vimeo или прямая ссылка на .mp4" required autocomplete="off">
+                <button type="submit" id="loadBtn" class="btn-accent">▶ Загрузить</button>
+            </form>
 
-            <!-- Участники -->
-            <div class="panel">
-                <div class="panel-head">👥 Участники</div>
-                <div id="participantsList" class="panel-body"></div>
+            <div class="player-wrapper">
+                <div id="playerEmbed" style="display:none;"></div>
+                <video id="player" playsinline controls></video>
             </div>
+        </div>
+
+        <!-- Правая панель: чат -->
+        <div class="chat-panel">
+            <div class="chat-head">💬 Чат</div>
+            <div id="chatMessages" class="chat-body"></div>
+            <form id="chatForm" class="chat-foot">
+                <input type="text" id="chatInput" class="input" placeholder="Написать сообщение..." maxlength="500" required autocomplete="off">
+                <button type="submit" class="btn-send">➤</button>
+            </form>
         </div>
     </div>
 
@@ -479,8 +369,8 @@
     </script>
 
     <script type="module">
-        // ============================================================
-        // ===== НАСТРОЙКА FIREBASE =====
+        // ===== ВАШ ПОЛНЫЙ НЕИЗМЕНЁННЫЙ JAVASCRIPT КОД =====
+        // (Вставлен из вашего предыдущего файла для полноты)
         // ============================================================
 
         import { initializeApp } from 'firebase/app';
@@ -551,6 +441,45 @@
 
         // Время последней локальной записи в Firestore (чтобы не реагировать на свои записи)
         let lastLocalUpdate = 0;
+
+        // Web Audio API для звуков
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSendSound() {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch (e) {}
+        }
+
+        function playReceiveSound() {
+            try {
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc1.frequency.value = 587.33;
+                osc2.frequency.value = 880;
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                osc1.start();
+                osc2.start();
+                osc1.stop(audioCtx.currentTime + 0.25);
+                osc2.stop(audioCtx.currentTime + 0.25);
+            } catch (e) {}
+        }
 
         // ============================================================
         // ===== ЭЛЕМЕНТЫ DOM =====
@@ -1056,7 +985,7 @@
          * Обновляет список сообщений в чате.
          */
         function updateChat(messages) {
-            if (messages.length <= lastMessageCount) return;
+            const isNewMessage = messages.length > lastMessageCount;
             lastMessageCount = messages.length;
 
             chatMessages.innerHTML = '';
@@ -1083,6 +1012,14 @@
             });
 
             chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Если новое сообщение не от нас — звук
+            if (isNewMessage && messages.length > 0) {
+                const lastMsg = messages[messages.length - 1];
+                if (lastMsg.user && lastMsg.user !== nickname) {
+                    playReceiveSound();
+                }
+            }
         }
 
         /**
@@ -1107,6 +1044,8 @@
             e.preventDefault();
             const text = chatInput.value.trim();
             if (!text) return;
+
+            playSendSound();
 
             try {
                 await updateDoc(roomRef, {
